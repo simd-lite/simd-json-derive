@@ -33,6 +33,32 @@ impl<W: Write> BaseGenerator for DummyGenerator<W> {
     }
 }
 
+impl Serialize for ()
+{
+    #[inline]
+    fn json_write<W>(&self, writer: &mut W) -> io::Result<()>
+    where
+        W: Write,
+    {
+        writer.write_all(b"null")
+    }
+}
+
+impl Serialize for bool
+{
+    #[inline]
+    fn json_write<W>(&self, writer: &mut W) -> io::Result<()>
+    where
+        W: Write,
+    {
+        if *self {
+            writer.write_all(b"true")
+        } else {
+            writer.write_all(b"false")
+        }
+    }
+}
+
 impl Serialize for String {
     #[inline]
     fn json_write<W>(&self, writer: &mut W) -> io::Result<()>
@@ -230,7 +256,7 @@ macro_rules! ryu {
 ryu!(f64);
 ryu!(f32);
 
-// Talen from https://docs.serde.rs/src/serde/ser/impls.rs.html#378
+// Taken from https://docs.serde.rs/src/serde/ser/impls.rs.html#378
 macro_rules! deref_impl {
     (
         $(#[doc = $doc:tt])*
@@ -251,3 +277,102 @@ macro_rules! deref_impl {
 
 deref_impl!(<'a, T> Serialize for &'a T where T: ?Sized + Serialize);
 deref_impl!(<'a, T> Serialize for &'a mut T where T: ?Sized + Serialize);
+deref_impl!(<T: ?Sized> Serialize for Box<T> where T: Serialize);
+deref_impl!(<'a, T: ?Sized> Serialize for std::borrow::Cow<'a, T> where T: Serialize + ToOwned);
+
+// Taken from https://docs.serde.rs/src/serde/ser/impls.rs.html#378
+
+impl<T> Serialize for [T; 0] {
+    #[inline]
+    fn json_write<W>(&self, writer: &mut W) -> io::Result<()>
+    where
+        W: Write,
+    {
+        writer.write_all(b"[]")
+    }
+}
+
+macro_rules! array_impls {
+    ($($len:tt)+) => {
+        $(
+            impl<T> Serialize for [T; $len]
+            where
+                T: Serialize,
+            {
+                #[inline]
+                fn json_write<W>(&self, writer: &mut W) -> io::Result<()>
+                where
+                    W: Write,
+                {
+                    let mut i = self.iter();
+                    if let Some(first) = i.next() {
+                        writer.write_all(b"[")?;
+                        first.json_write(writer)?;
+                        for e in i {
+                            writer.write_all(b",")?;
+                            e.json_write(writer)?;
+                        }
+                        writer.write_all(b"]")
+                    } else {
+                        unreachable!()
+                    }
+                }
+                }
+        )+
+    }
+}
+
+array_impls! {
+    01 02 03 04 05 06 07 08 09
+    10 11 12 13 14 15 16 17 18 19
+    20 21 22 23 24 25 26 27 28 29
+    30 31 32
+}
+
+
+// takenn from https://docs.serde.rs/src/serde/ser/impls.rs.html#306
+
+macro_rules! tuple_impls {
+    ($($len:expr => ($($n:tt $name:ident)+))+) => {
+        $(
+            impl<$($name),+> Serialize for ($($name,)+)
+            where
+                $($name: Serialize,)+
+            {
+                #[inline]
+                fn json_write<W>(&self, writer: &mut W) -> io::Result<()>
+                where
+                    W: Write,
+                {
+                    writer.write_all(b"[")?;
+                    $(
+                        if $n == 0 {                       
+                            writer.write_all(b",")?;
+                        }
+                        self.$n.json_write(writer)?;
+                    )+
+                    writer.write_all(b"]")
+                }
+            }
+        )+
+    }
+}
+
+tuple_impls! {
+    1 => (0 T0)
+    2 => (0 T0 1 T1)
+    3 => (0 T0 1 T1 2 T2)
+    4 => (0 T0 1 T1 2 T2 3 T3)
+    5 => (0 T0 1 T1 2 T2 3 T3 4 T4)
+    6 => (0 T0 1 T1 2 T2 3 T3 4 T4 5 T5)
+    7 => (0 T0 1 T1 2 T2 3 T3 4 T4 5 T5 6 T6)
+    8 => (0 T0 1 T1 2 T2 3 T3 4 T4 5 T5 6 T6 7 T7)
+    9 => (0 T0 1 T1 2 T2 3 T3 4 T4 5 T5 6 T6 7 T7 8 T8)
+    10 => (0 T0 1 T1 2 T2 3 T3 4 T4 5 T5 6 T6 7 T7 8 T8 9 T9)
+    11 => (0 T0 1 T1 2 T2 3 T3 4 T4 5 T5 6 T6 7 T7 8 T8 9 T9 10 T10)
+    12 => (0 T0 1 T1 2 T2 3 T3 4 T4 5 T5 6 T6 7 T7 8 T8 9 T9 10 T10 11 T11)
+    13 => (0 T0 1 T1 2 T2 3 T3 4 T4 5 T5 6 T6 7 T7 8 T8 9 T9 10 T10 11 T11 12 T12)
+    14 => (0 T0 1 T1 2 T2 3 T3 4 T4 5 T5 6 T6 7 T7 8 T8 9 T9 10 T10 11 T11 12 T12 13 T13)
+    15 => (0 T0 1 T1 2 T2 3 T3 4 T4 5 T5 6 T6 7 T7 8 T8 9 T9 10 T10 11 T11 12 T12 13 T13 14 T14)
+    16 => (0 T0 1 T1 2 T2 3 T3 4 T4 5 T5 6 T6 7 T7 8 T8 9 T9 10 T10 11 T11 12 T12 13 T13 14 T14 15 T15)
+}
