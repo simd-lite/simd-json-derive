@@ -130,7 +130,7 @@ where
 
 impl<K, V, H> Serialize for collections::HashMap<K, V, H>
 where
-    K: std::borrow::Borrow<str>,
+    K: Serialize,
     V: Serialize,
     H: std::hash::BuildHasher,
 {
@@ -142,13 +142,11 @@ where
         let mut i = self.iter();
         if let Some((k, v)) = i.next() {
             writer.write_all(b"{")?;
-            let k: &str = k.borrow();
             k.json_write(writer)?;
             writer.write_all(b":")?;
             v.json_write(writer)?;
             for (k, v) in i {
                 writer.write_all(b",")?;
-                let k: &str = k.borrow();
                 k.json_write(writer)?;
                 writer.write_all(b":")?;
                 v.json_write(writer)?;
@@ -162,7 +160,7 @@ where
 
 impl<K, V> Serialize for collections::BTreeMap<K, V>
 where
-    K: std::borrow::Borrow<str>,
+    K: Serialize,
     V: Serialize,
 {
     #[inline]
@@ -173,13 +171,11 @@ where
         let mut i = self.iter();
         if let Some((k, v)) = i.next() {
             writer.write_all(b"{")?;
-            let k: &str = k.borrow();
             k.json_write(writer)?;
             writer.write_all(b":")?;
             v.json_write(writer)?;
             for (k, v) in i {
                 writer.write_all(b",")?;
-                let k: &str = k.borrow();
                 k.json_write(writer)?;
                 writer.write_all(b":")?;
                 v.json_write(writer)?;

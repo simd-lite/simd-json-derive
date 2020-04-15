@@ -10,9 +10,6 @@ use syn::{
 #[proc_macro_derive(Serialize)]
 pub fn my_derive(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
-
-    dbg!(&input);
-
     match input {
         DeriveInput {
             ident,
@@ -67,7 +64,6 @@ pub fn my_derive(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
                 }
             };
 
-            dbg!(&keys, &values);
             let expanded = quote! {
                 impl simd_json_derive::Serialize for #ident {
                     #[inline]
