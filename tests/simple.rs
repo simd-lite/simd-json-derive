@@ -1,12 +1,24 @@
+use simd_json_derive::Serialize;
+
 #[test]
-fn unnamed() {
+fn unnamed1() {
     #[derive(simd_json_derive::Serialize)]
     struct Bla(u8);
-    assert!(false)
+    let b = Bla(1);
+    println!("{}", b.json_string().unwrap());
+    assert_eq!(r#"1"#, b.json_string().unwrap())
 }
 #[test]
+fn unnamed2() {
+    #[derive(simd_json_derive::Serialize)]
+    struct Bla(u8, u16);
+    let b = Bla(1, 2);
+    println!("{}", b.json_string().unwrap());
+    assert_eq!(r#"[1,2]"#, b.json_string().unwrap())
+}
+
+#[test]
 fn named() {
-    use simd_json_derive::Serialize;
     #[derive(simd_json_derive::Serialize)]
     struct Bla {
         f1: u8,

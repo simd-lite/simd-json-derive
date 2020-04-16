@@ -20,18 +20,44 @@ pub fn my_derive(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
                 }),
             ..
         } => {
-            dbg!(unnamed);
-            let expanded = quote! {
-                impl simd_json_derive::Serialize for #ident {
-                    fn json_write<W>(&self, writer: &mut W) -> std::io::Result<()>
-                    where
-                        W: std::io::Write {
-
-                            Ok(())
-                        }
-                }
-            };
-            TokenStream::from(expanded)
+            if unnamed.len() == 1 {
+                let expanded = quote! {
+                    impl simd_json_derive::Serialize for #ident {
+                        fn json_write<W>(&self, writer: &mut W) -> std::io::Result<()>
+                        where
+                            W: std::io::Write {
+                                self.0.json_write(writer)
+                            }
+                    }
+                };
+                TokenStream::from(expanded)
+            } else {
+                let keys: Vec<_> = unnamed.iter().enumerate().map(|(i, _)| i).skip(1).collect();
+                let expanded = quote! {
+                    impl simd_json_derive::Serialize for #ident {
+                        fn json_write<W>(&self, writer: &mut W) -> std::io::Result<()>
+                        where
+                            W: std::io::Write {
+                                if let Err(e) = writer.write_all(b"[") {
+                                    return Err(e)
+                                }
+                                    if let Err(e) = self.0.json_write(writer) {
+                                        return Err(e)
+                                    }
+                                #(
+                                    if let Err(e) = writer.write_all(b",") {
+                                        return Err(e)
+                                    };
+                                    if let Err(e) = self.#keys.json_write(writer) {
+                                        return Err(e)
+                                    };
+                                )*
+                                writer.write_all(b"]")
+                            }
+                    }
+                };
+                TokenStream::from(expanded)
+            }
         }
         DeriveInput {
             ident,
