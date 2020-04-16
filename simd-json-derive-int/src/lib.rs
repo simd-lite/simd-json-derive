@@ -115,6 +115,24 @@ pub fn my_derive(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
             };
             TokenStream::from(expanded)
         }
+        DeriveInput {
+            ident,
+            data: Data::Enum(d),
+            ..
+        } => {
+            dbg!(d);
+            let expanded = quote! {
+                impl simd_json_derive::Serialize for #ident {
+                    #[inline]
+                    fn json_write<W>(&self, writer: &mut W) -> std::io::Result<()>
+                    where
+                        W: std::io::Write {
+                            Ok(())
+                        }
+                }
+            };
+            TokenStream::from(expanded)
+        }
         _ => {
             dbg!(input);
             TokenStream::from(quote! {})
