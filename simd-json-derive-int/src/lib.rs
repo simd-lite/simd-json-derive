@@ -32,7 +32,12 @@ pub fn my_derive(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
                 };
                 TokenStream::from(expanded)
             } else {
-                let keys: Vec<_> = unnamed.iter().enumerate().map(|(i, _)| i).skip(1).collect();
+                let keys: Vec<_> = unnamed
+                    .iter()
+                    .enumerate()
+                    .map(|(i, _)| syn::Index::from(i))
+                    .skip(1)
+                    .collect();
                 let expanded = quote! {
                     impl simd_json_derive::Serialize for #ident {
                         fn json_write<W>(&self, writer: &mut W) -> std::io::Result<()>
