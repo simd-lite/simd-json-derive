@@ -33,8 +33,7 @@ impl<W: Write> BaseGenerator for DummyGenerator<W> {
     }
 }
 
-impl Serialize for ()
-{
+impl Serialize for () {
     #[inline]
     fn json_write<W>(&self, writer: &mut W) -> io::Result<()>
     where
@@ -44,8 +43,7 @@ impl Serialize for ()
     }
 }
 
-impl Serialize for bool
-{
+impl Serialize for bool {
     #[inline]
     fn json_write<W>(&self, writer: &mut W) -> io::Result<()>
     where
@@ -329,7 +327,6 @@ array_impls! {
     30 31 32
 }
 
-
 // takenn from https://docs.serde.rs/src/serde/ser/impls.rs.html#306
 
 macro_rules! tuple_impls {
@@ -346,7 +343,7 @@ macro_rules! tuple_impls {
                 {
                     writer.write_all(b"[")?;
                     $(
-                        if $n == 0 {                       
+                        if $n == 0 {
                             writer.write_all(b",")?;
                         }
                         self.$n.json_write(writer)?;
