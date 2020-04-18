@@ -121,13 +121,9 @@ pub fn my_derive(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
             data: Data::Enum(d),
             ..
         } => {
-            dbg!(&d);
-            let variants = dbg!(d.variants);
-
+            let variants = d.variants;
             let (simple, variants): (Vec<_>, Vec<_>) =
                 variants.into_iter().partition(|v| v.fields.is_empty());
-
-            dbg!(&simple);
             let (named, unnamed): (Vec<_>, Vec<_>) = variants.iter().partition(|v| {
                 if let Variant {
                     fields: Fields::Named(_),
