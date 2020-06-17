@@ -4,6 +4,7 @@ mod chrono;
 mod collections;
 mod deref;
 mod primitives;
+mod simd_json;
 mod string;
 mod tpl;
 use crate::*;
