@@ -33,3 +33,26 @@ fn enum_stuff_02() {
     let b = Bla::Wobble;
     assert_eq!(r#""Wobble""#, b.json_string().unwrap());
 }
+
+#[test]
+fn enum_stuff_01_lifeimte() {
+    #[derive(simd_json_derive::Serialize)]
+    enum Bla<'a, 'b> {
+        Blubb,
+        Wobbble(&'a str),
+        Wobbble2(&'a str, &'b str),
+        Gobble { k1: u8, k2: u16 },
+    };
+
+    let b = Bla::Blubb;
+    assert_eq!(r#""Blubb""#, b.json_string().unwrap());
+    let b = Bla::Wobbble("snot");
+    assert_eq!(r#"{"Wobbble":"snot"}"#, b.json_string().unwrap());
+    let b = Bla::Wobbble2("snot", "badger");
+    assert_eq!(
+        r#"{"Wobbble2":["snot","badger"]}"#,
+        b.json_string().unwrap()
+    );
+    let b = Bla::Gobble { k1: 2, k2: 3 };
+    assert_eq!(r#"{"Gobble":{"k1":2,"k2":3}}"#, b.json_string().unwrap());
+}

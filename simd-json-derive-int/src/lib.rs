@@ -11,6 +11,7 @@ use syn::{
 pub fn my_derive(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     match input {
+        // Unnamed struct
         DeriveInput {
             ident,
             data:
@@ -18,11 +19,12 @@ pub fn my_derive(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
                     fields: Fields::Unnamed(FieldsUnnamed { unnamed, .. }),
                     ..
                 }),
+            generics,
             ..
         } => {
             if unnamed.len() == 1 {
                 let expanded = quote! {
-                    impl simd_json_derive::Serialize for #ident {
+                    impl #generics simd_json_derive::Serialize for #ident #generics {
                         fn json_write<W>(&self, writer: &mut W) -> std::io::Result<()>
                         where
                             W: std::io::Write {
@@ -39,7 +41,7 @@ pub fn my_derive(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
                     .skip(1)
                     .collect();
                 let expanded = quote! {
-                    impl simd_json_derive::Serialize for #ident {
+                    impl #generics simd_json_derive::Serialize for #ident #generics {
                         fn json_write<W>(&self, writer: &mut W) -> std::io::Result<()>
                         where
                             W: std::io::Write {
@@ -71,6 +73,7 @@ pub fn my_derive(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
                     fields: Fields::Named(FieldsNamed { named, .. }),
                     ..
                 }),
+            generics,
             ..
         } => {
             let (mut keys, values): (Vec<_>, Vec<_>) = named
@@ -96,7 +99,7 @@ pub fn my_derive(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
             };
 
             let expanded = quote! {
-                impl simd_json_derive::Serialize for #ident {
+                impl #generics simd_json_derive::Serialize for #ident #generics {
                     #[inline]
                     fn json_write<W>(&self, writer: &mut W) -> std::io::Result<()>
                     where
@@ -118,6 +121,7 @@ pub fn my_derive(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
         DeriveInput {
             ident,
             data: Data::Enum(d),
+            generics,
             ..
         } => {
             let mut body_elements = Vec::new();
@@ -306,7 +310,7 @@ pub fn my_derive(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
             };
 
             let expanded = quote! {
-                impl simd_json_derive::Serialize for #ident {
+                impl #generics simd_json_derive::Serialize for #ident #generics {
                     #[inline]
                     fn json_write<W>(&self, writer: &mut W) -> std::io::Result<()>
                     where
@@ -320,9 +324,6 @@ pub fn my_derive(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
             };
             TokenStream::from(expanded)
         }
-        _ => {
-            dbg!(input);
-            TokenStream::from(quote! {})
-        }
+        _ => TokenStream::from(quote! {}),
     }
 }

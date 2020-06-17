@@ -3,7 +3,7 @@ use std::collections;
 use std::io::{self, Write};
 use value_trait::generator::BaseGenerator;
 mod impls;
-type Result = io::Result<()>;
+pub type Result = io::Result<()>;
 
 pub trait Serialize {
     fn json_write<W>(&self, writer: &mut W) -> Result
