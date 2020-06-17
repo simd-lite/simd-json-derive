@@ -7,11 +7,17 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-simd-json-derive-int = {path = "./simd-json-derive-int"}
+simd-json-derive-int = { path = "./simd-json-derive-int", version = "0.1"}
 value-trait = "0.1"
 itoa = "0.4"
 ryu = "1"
+chrono = {version = "0.4", optional = true}
 
 [dev-dependencies]
 serde_json = "1"
 serde = "1"
+
+[features]
+default = ["impl-chrono"]
+
+impl-chrono = ["chrono"]

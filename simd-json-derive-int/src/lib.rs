@@ -4,8 +4,7 @@ use proc_macro2::{Ident, Span};
 use quote::quote;
 use simd_json::prelude::*;
 use syn::{
-    parse_macro_input, Data, DataStruct, DeriveInput, Field, Fields, FieldsNamed, FieldsUnnamed,
-    Variant,
+    parse_macro_input, Data, DataStruct, DeriveInput, Fields, FieldsNamed, FieldsUnnamed, Variant,
 };
 
 #[proc_macro_derive(Serialize)]
@@ -121,6 +120,7 @@ pub fn my_derive(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
             data: Data::Enum(d),
             ..
         } => {
+            let mut body_elements = Vec::new();
             let variants = d.variants;
             let (simple, variants): (Vec<_>, Vec<_>) =
                 variants.into_iter().partition(|v| v.fields.is_empty());
@@ -160,6 +160,10 @@ pub fn my_derive(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
                 ),*
             };
 
+            if !simple.is_empty() {
+                body_elements.push(simple);
+            }
+
             // Unnamed enum variants with exactly 1 field of Enum::Variant(type1)
             // They serialize as: {"Varriant":..}
 
@@ -188,6 +192,9 @@ pub fn my_derive(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
                     }
                 ),*
             };
+            if !unnamed1.is_empty() {
+                body_elements.push(unnamed1);
+            }
 
             // Unnamed enum variants with more then 1 field of Enum::Variant(type1, type2, type3)
             // They serialize as: {"Varriant":[.., .., ..]}
@@ -244,6 +251,9 @@ pub fn my_derive(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
                     }
                 ),*
             };
+            if !unnamed.is_empty() {
+                body_elements.push(unnamed);
+            }
 
             // Named enum variants of the form Enum::Variant{key1: type, key2: type...}
             // They serialize as: {"Varriant":{"key1":..,"key2":..}}
@@ -287,7 +297,10 @@ pub fn my_derive(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
             }
             let named = quote! {#(#named_bodies),*};
 
-            let body_elements = [simple, unnamed1, unnamed, named];
+            if !named.is_empty() {
+                body_elements.push(named);
+            }
+
             let match_body = quote! {
                 #(#body_elements),*
             };

@@ -1,7 +1,7 @@
 use simd_json_derive::Serialize;
 
 #[test]
-fn enum_stuff() {
+fn enum_stuff_01() {
     #[derive(simd_json_derive::Serialize)]
     enum Bla {
         Blubb,
@@ -18,4 +18,18 @@ fn enum_stuff() {
     assert_eq!(r#"{"Wobbble2":[1,2]}"#, b.json_string().unwrap());
     let b = Bla::Gobble { k1: 2, k2: 3 };
     assert_eq!(r#"{"Gobble":{"k1":2,"k2":3}}"#, b.json_string().unwrap());
+}
+
+#[test]
+fn enum_stuff_02() {
+    #[derive(simd_json_derive::Serialize)]
+    enum Bla {
+        Blubb,
+        Wobble,
+    };
+
+    let b = Bla::Blubb;
+    assert_eq!(r#""Blubb""#, b.json_string().unwrap());
+    let b = Bla::Wobble;
+    assert_eq!(r#""Wobble""#, b.json_string().unwrap());
 }
