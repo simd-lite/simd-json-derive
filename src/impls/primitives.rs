@@ -36,6 +36,7 @@ itoa!(i32);
 itoa!(u32);
 itoa!(i64);
 itoa!(u64);
+itoa!(usize);
 itoa!(i128);
 itoa!(u128);
 
