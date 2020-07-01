@@ -164,3 +164,19 @@ where
         }
     }
 }
+
+#[cfg(test)]
+mod test {
+    use crate::*;
+    #[test]
+    fn vec() {
+        let mut v = Vec::new();
+        assert_eq!(v.json_string().unwrap(), "[]");
+        v.push(1);
+        assert_eq!(v.json_string().unwrap(), "[1]");
+        v.push(2);
+        assert_eq!(v.json_string().unwrap(), "[1,2]");
+        v.push(3);
+        assert_eq!(v.json_string().unwrap(), "[1,2,3]");
+    }
+}

@@ -55,3 +55,24 @@ array_impls! {
     20 21 22 23 24 25 26 27 28 29
     30 31 32
 }
+
+#[cfg(test)]
+mod test {
+    use crate::*;
+    #[test]
+    fn arr() {
+        let s: [u8; 0] = [];
+        assert_eq!(s.json_string().unwrap(), "[]");
+        assert_eq!([1].json_string().unwrap(), "[1]");
+        assert_eq!([1, 2].json_string().unwrap(), "[1,2]");
+        assert_eq!([1, 2, 3].json_string().unwrap(), "[1,2,3]");
+    }
+    #[test]
+    fn slice() {
+        let s: [u8; 0] = [];
+        assert_eq!((&s).json_string().unwrap(), "[]");
+        assert_eq!((&[1]).json_string().unwrap(), "[1]");
+        assert_eq!((&[1, 2]).json_string().unwrap(), "[1,2]");
+        assert_eq!((&[1, 2, 3]).json_string().unwrap(), "[1,2,3]");
+    }
+}
