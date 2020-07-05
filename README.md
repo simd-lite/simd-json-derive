@@ -5,3 +5,7 @@ Attributres are supported for both `#[simd_json(...)]` and for compatibilty also
 For fields:
 
 * `rename = "new_name"` - renames a field
+
+For structs:
+
+* `rename_all = "camelCase"` - renames all (not otherwise renamed) based on the rule, `camelCase` is currently supportd
