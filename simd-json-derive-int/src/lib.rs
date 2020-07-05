@@ -1,12 +1,13 @@
 use proc_macro::TokenStream;
 use proc_macro::{self};
-use proc_macro2::{Ident, Span};
+use proc_macro2::{Ident, Literal, Span};
 use quote::quote;
 use simd_json::prelude::*;
+use syn::parse::{Parse, ParseStream};
 use syn::token::Comma;
 use syn::{
-    parse_macro_input, punctuated::Punctuated, Data, DataEnum, DataStruct, DeriveInput, Field,
-    Fields, FieldsNamed, FieldsUnnamed, Generics, Variant,
+    parse_macro_input, punctuated::Punctuated, Attribute, Data, DataEnum, DataStruct, DeriveInput,
+    Field, Fields, FieldsNamed, FieldsUnnamed, Generics, Token, Variant,
 };
 
 /// Unnamed struct as `Struct(u8)` or `Struct(u8, String)`
@@ -60,6 +61,51 @@ fn derive_unnamed_struct(
     }
 }
 
+struct Rename(Option<String>);
+
+impl Parse for Rename {
+    fn parse(input: ParseStream) -> syn::Result<Self> {
+        let rename: Ident = input.parse()?;
+        if rename != "rename" {
+            return Ok(Rename(None));
+        };
+        let _eqal_token: Token![=] = input.parse()?;
+        let name: Literal = input.parse()?;
+
+        Ok(Rename(Some(name.to_string())))
+    }
+}
+
+fn rename_attr(attr: &Attribute) -> Option<String> {
+    attr.parse_args::<Rename>()
+        .ok()?
+        .0
+        .map(|s| s.trim_matches('"').to_string())
+}
+
+fn get_attr<'field>(field: &'field Field, name: &str) -> Option<&'field Attribute> {
+    field
+        .attrs
+        .iter()
+        .filter(|a| a.path.get_ident().map(|i| i == name).unwrap_or_default())
+        .next()
+}
+
+fn name(field: &Field) -> Option<String> {
+    if let Some(attr) = get_attr(field, "simd_json").and_then(rename_attr) {
+        Some(format!("{}:", simd_json::OwnedValue::from(attr).encode()))
+    } else if let Some(attr) = get_attr(field, "serde").and_then(rename_attr) {
+        Some(format!("{}:", simd_json::OwnedValue::from(attr).encode()))
+    } else {
+        field.ident.as_ref().map(|ident| {
+            format!(
+                "{}:",
+                simd_json::OwnedValue::from(ident.to_string()).encode()
+            )
+        })
+    }
+}
+
 /// Named struct as `Struct(u8)` or `Struct(u8, String)`
 fn derive_named_struct(
     ident: Ident,
@@ -69,15 +115,8 @@ fn derive_named_struct(
     let (mut keys, values): (Vec<_>, Vec<_>) = fields
         .iter()
         .filter_map(|f| {
-            f.ident.clone().map(|ident| {
-                (
-                    format!(
-                        "{}:",
-                        simd_json::OwnedValue::from(ident.to_string()).encode()
-                    ),
-                    ident,
-                )
-            })
+            let name = name(f)?;
+            Some((name, f.ident.as_ref()?.clone()))
         })
         .unzip();
 
