@@ -1,7 +1,7 @@
 use proc_macro2::{Ident, Literal};
 use simd_json::prelude::*;
 use syn::parse::{Parse, ParseStream};
-use syn::{Attribute, Token, Field};
+use syn::{Attribute, Field, Token};
 
 pub(crate) struct FieldAttrs {
     rename: Option<String>,

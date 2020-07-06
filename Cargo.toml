@@ -26,5 +26,7 @@ serde = "1"
 
 [features]
 default = ["impl-chrono"]
-
 impl-chrono = ["chrono"]
+
+[patch.crates-io]
+simd-json = { path = "../simd-json" }

@@ -4,7 +4,7 @@ mod chrono;
 mod collections;
 mod deref;
 mod primitives;
-mod simd_json;
+mod simdjson;
 mod string;
 mod tpl;
 use crate::*;
@@ -36,6 +36,24 @@ where
             e.json_write(writer)
         } else {
             writer.write_all(b"null")
+        }
+    }
+}
+
+impl<T> Deserialize for Option<T>
+where
+    T: Deserialize,
+{
+    #[inline]
+    fn from_tape<'input>(tape: &mut Tape<'input>) -> simd_json::Result<Self>
+    where
+        Self: std::marker::Sized + 'input,
+    {
+        if let Some(simd_json::Node::Static(simd_json::StaticNode::Null)) = tape.peek() {
+            tape.next();
+            Ok(None)
+        } else {
+            Ok(Some(T::from_tape(tape)?))
         }
     }
 }
