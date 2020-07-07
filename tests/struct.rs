@@ -1,4 +1,4 @@
-use simd_json_derive::{Serialize, Deserialize};
+use simd_json_derive::{Deserialize, Serialize};
 
 #[test]
 fn unnamed1() {
@@ -34,7 +34,6 @@ fn named() {
     assert_eq!(r#"{"f1":1,"f2":"snot"}"#, s);
     let b1 = Bla::from_str(s.as_mut_str()).unwrap();
     assert_eq!(b, b1);
-
 }
 
 #[test]

@@ -28,6 +28,7 @@ impl<Tz: TimeZone> Serialize for DateTime<Tz> {
 }
 
 impl Deserialize for DateTime<FixedOffset> {
+    #[inline]
     fn from_tape<'input>(tape: &mut Tape<'input>) -> simd_json::Result<Self>
     where
         Self: std::marker::Sized + 'input,

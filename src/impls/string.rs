@@ -11,15 +11,18 @@ impl Serialize for String {
 }
 
 impl Deserialize for String {
+    #[inline]
     fn from_tape<'input>(tape: &mut Tape<'input>) -> simd_json::Result<Self>
     where
         Self: std::marker::Sized + 'input,
     {
         match tape.next() {
             Some(simd_json::Node::String(s)) => Ok(String::from(s)),
-            _ => Err(simd_json::Error::generic(
-                simd_json::ErrorType::ExpectedString,
-            )),
+            _ => {
+                Err(simd_json::Error::generic(
+                    simd_json::ErrorType::ExpectedString,
+                ))
+            }
         }
     }
 }
@@ -36,6 +39,7 @@ impl Serialize for str {
 
 // Figure this out.
 // impl Deserialize for str {
+//     #[inline]
 //     fn from_tape<'input>(
 //         tape: &mut Tape<'input>,
 //     ) -> simd_json::Result<Self>

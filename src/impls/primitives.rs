@@ -15,6 +15,22 @@ impl Serialize for bool {
     }
 }
 
+impl Deserialize for bool {
+    #[inline]
+    fn from_tape<'input>(tape: &mut Tape<'input>) -> simd_json::Result<Self>
+    where
+        Self: std::marker::Sized + 'input,
+    {
+        if let Some(simd_json::Node::Static(simd_json::StaticNode::Bool(r))) = tape.next() {
+            Ok(r)
+        } else {
+            Err(simd_json::Error::generic(
+                simd_json::ErrorType::ExpectedBoolean,
+            ))
+        }
+    }
+}
+
 macro_rules! itoa {
     ($t:ty) => {
         impl Serialize for $t {
@@ -28,6 +44,7 @@ macro_rules! itoa {
         }
 
         impl Deserialize for $t {
+            #[inline]
             fn from_tape<'input>(tape: &mut Tape<'input>) -> simd_json::Result<Self>
             where
                 Self: std::marker::Sized + 'input,
@@ -56,7 +73,7 @@ macro_rules! itoa {
                         })
                     }
                     _ => Err(simd_json::Error::generic(
-                        simd_json::ErrorType::ExpectedString,
+                        simd_json::ErrorType::ExpectedInteger,
                     )),
                 }
             }
@@ -95,6 +112,7 @@ ryu!(f64);
 ryu!(f32);
 
 impl Deserialize for f64 {
+    #[inline]
     fn from_tape<'input>(tape: &mut Tape<'input>) -> simd_json::Result<Self>
     where
         Self: std::marker::Sized + 'input,
@@ -108,13 +126,14 @@ impl Deserialize for f64 {
             #[cfg(feature = "128bit")]
             Some(simd_json::Node::Static(simd_json::StaticNode::UI28(i))) => Ok(i as f64),
             _ => Err(simd_json::Error::generic(
-                simd_json::ErrorType::ExpectedString,
+                simd_json::ErrorType::ExpectedFloat,
             )),
         }
     }
 }
 
 impl Deserialize for f32 {
+    #[inline]
     fn from_tape<'input>(tape: &mut Tape<'input>) -> simd_json::Result<Self>
     where
         Self: std::marker::Sized + 'input,

@@ -1,5 +1,18 @@
 use crate::*;
 
+impl<T> Deserialize for Box<T>
+where
+    T: Deserialize,
+{
+    #[inline]
+    fn from_tape<'input>(tape: &mut Tape<'input>) -> simd_json::Result<Self>
+    where
+        Self: std::marker::Sized + 'input,
+    {
+        Ok(Box::new(T::from_tape(tape)?))
+    }
+}
+
 // Taken from https://docs.serde.rs/src/serde/ser/impls.rs.html#378
 macro_rules! deref_impl {
     (

@@ -3,6 +3,7 @@ use simd_json::prelude::*;
 use syn::parse::{Parse, ParseStream};
 use syn::{Attribute, Field, Token};
 
+#[derive(Debug)]
 pub(crate) struct FieldAttrs {
     rename: Option<String>,
 }
@@ -34,6 +35,7 @@ impl Parse for FieldAttrs {
     }
 }
 
+#[derive(Debug)]
 pub(crate) enum RenameAll {
     None,
     CamelCase,
@@ -53,7 +55,7 @@ impl RenameAll {
             RenameAll::None => String::from(field),
             RenameAll::CamelCase => {
                 let mut parts = field.split('_');
-                let first = parts.next().unwrap();
+                let first = parts.next().expect("zero length name");
                 format!(
                     "{}{}",
                     first,
@@ -63,15 +65,17 @@ impl RenameAll {
         }
     }
 }
-
+#[derive(Debug)]
 pub(crate) struct StructAttrs {
     rename_all: RenameAll,
+    deny_unknown_fields: bool,
 }
 
 impl Default for StructAttrs {
     fn default() -> Self {
         StructAttrs {
             rename_all: RenameAll::None,
+            deny_unknown_fields: false,
         }
     }
 }
@@ -79,7 +83,7 @@ impl Default for StructAttrs {
 impl Parse for StructAttrs {
     fn parse(input: ParseStream) -> syn::Result<Self> {
         let mut rename_all = RenameAll::None;
-
+        let mut deny_unknown_fields = false;
         while !input.is_empty() {
             let attr: Ident = input.parse()?;
             match attr.to_string().as_str() {
@@ -97,6 +101,9 @@ impl Parse for StructAttrs {
                         }
                     }
                 }
+                "deny_unknown_fields" => {
+                    deny_unknown_fields = true;
+                }
                 other => {
                     return Err(syn::Error::new(
                         attr.span(),
@@ -104,8 +111,14 @@ impl Parse for StructAttrs {
                     ))
                 }
             }
+            if !input.is_empty() {
+                let _comma_token: Token![,] = input.parse()?;
+            }
         }
-        Ok(StructAttrs { rename_all })
+        Ok(StructAttrs {
+            rename_all,
+            deny_unknown_fields,
+        })
     }
 }
 

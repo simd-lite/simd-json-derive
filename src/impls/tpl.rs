@@ -10,6 +10,22 @@ impl Serialize for () {
     }
 }
 
+impl Deserialize for () {
+    #[inline]
+    fn from_tape<'input>(tape: &mut Tape<'input>) -> simd_json::Result<Self>
+    where
+        Self: std::marker::Sized + 'input,
+    {
+        if let Some(simd_json::Node::Static(simd_json::StaticNode::Null)) = tape.next() {
+            Ok(())
+        } else {
+            Err(simd_json::Error::generic(
+                simd_json::ErrorType::ExpectedNull,
+            ))
+        }
+    }
+}
+
 // takenn from https://docs.serde.rs/src/serde/ser/impls.rs.html#306
 
 macro_rules! tuple_impls {
@@ -38,6 +54,26 @@ macro_rules! tuple_impls {
                         };
                     )+
                     writer.write_all(b"]")
+                }
+            }
+            impl<$($name),+> Deserialize for ($($name,)+)
+            where
+                $($name: Deserialize,)+
+            {
+                #[inline]
+                fn from_tape<'input>(tape: &mut Tape<'input>) -> simd_json::Result<Self>
+                where
+                    Self: std::marker::Sized + 'input,
+                {
+                    if let Some(simd_json::Node::Array($len, _)) = tape.next() {
+                        Ok((
+                            $($name::from_tape(tape)?,)+
+                        ))
+                    } else {
+                        Err(simd_json::Error::generic(
+                            simd_json::ErrorType::ExpectedArray,
+                        ))
+                    }
                 }
             }
         )+

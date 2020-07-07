@@ -210,7 +210,7 @@ fn derive_enum(ident: Ident, data: DataEnum, generics: Generics) -> TokenStream 
         unnamed_ident_and_vars.into_iter().unzip();
 
     let unnamed_vecs = unnamed_var_names.iter().map(|vs| {
-        let (first, rest) = vs.split_first().unwrap();
+        let (first, rest) = vs.split_first().expect("zero unnamed vars");
         quote! {
             if let Err(e) = #first.json_write(writer) {
                 return Err(e);
@@ -250,8 +250,13 @@ fn derive_enum(ident: Ident, data: DataEnum, generics: Generics) -> TokenStream 
     let mut named_bodies = Vec::new();
     for v in named {
         let named_ident = &v.ident;
-        let fields: Vec<_> = v.fields.iter().cloned().map(|f| f.ident.unwrap()).collect();
-        let (first, rest) = fields.split_first().unwrap();
+        let fields: Vec<_> = v
+            .fields
+            .iter()
+            .cloned()
+            .map(|f| f.ident.expect("no field ident"))
+            .collect();
+        let (first, rest) = fields.split_first().expect("zero fields");
 
         let start = format!(
             "{{{}:{{{}:",

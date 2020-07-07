@@ -41,6 +41,7 @@ impl<T> Deserialize for Vec<T>
 where
     T: Deserialize,
 {
+    #[inline]
     fn from_tape<'input>(tape: &mut Tape<'input>) -> simd_json::Result<Self>
     where
         Self: std::marker::Sized + 'input,
@@ -53,12 +54,9 @@ where
                 }
                 Ok(v)
             }
-            other => {
-                dbg!(other);
-                Err(simd_json::Error::generic(
-                    simd_json::ErrorType::ExpectedArray,
-                ))
-            }
+            _other => Err(simd_json::Error::generic(
+                simd_json::ErrorType::ExpectedArray,
+            )),
         }
     }
 }
@@ -69,6 +67,7 @@ impl<T> Deserialize for collections::VecDeque<T>
 where
     T: Deserialize,
 {
+    #[inline]
     fn from_tape<'input>(tape: &mut Tape<'input>) -> simd_json::Result<Self>
     where
         Self: std::marker::Sized + 'input,
@@ -91,6 +90,7 @@ impl<T> Deserialize for collections::BinaryHeap<T>
 where
     T: Deserialize + Ord,
 {
+    #[inline]
     fn from_tape<'input>(tape: &mut Tape<'input>) -> simd_json::Result<Self>
     where
         Self: std::marker::Sized + 'input,
@@ -113,6 +113,7 @@ impl<T> Deserialize for collections::BTreeSet<T>
 where
     T: Deserialize + Ord,
 {
+    #[inline]
     fn from_tape<'input>(tape: &mut Tape<'input>) -> simd_json::Result<Self>
     where
         Self: std::marker::Sized + 'input,
@@ -135,6 +136,7 @@ impl<T> Deserialize for collections::LinkedList<T>
 where
     T: Deserialize + Ord,
 {
+    #[inline]
     fn from_tape<'input>(tape: &mut Tape<'input>) -> simd_json::Result<Self>
     where
         Self: std::marker::Sized + 'input,
@@ -189,6 +191,7 @@ where
     T: Deserialize + std::hash::Hash + Eq,
     H: std::hash::BuildHasher + Default,
 {
+    #[inline]
     fn from_tape<'input>(tape: &mut Tape<'input>) -> simd_json::Result<Self>
     where
         Self: std::marker::Sized + 'input,
@@ -259,6 +262,7 @@ where
     V: Deserialize,
     H: std::hash::BuildHasher + Default,
 {
+    #[inline]
     fn from_tape<'input>(tape: &mut Tape<'input>) -> simd_json::Result<Self>
     where
         Self: std::marker::Sized + 'input,
@@ -325,6 +329,7 @@ where
     K: Deserialize + Ord,
     V: Deserialize,
 {
+    #[inline]
     fn from_tape<'input>(tape: &mut Tape<'input>) -> simd_json::Result<Self>
     where
         Self: std::marker::Sized + 'input,
