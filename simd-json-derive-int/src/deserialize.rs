@@ -22,6 +22,7 @@ fn derive_named_struct(
     let mut getters = Vec::new();
     let mut options = Vec::new();
     let mut ids = Vec::new();
+    let mut opt_ids = Vec::new();
     let mut id: u64 = 1;
     let mut all: u64 = 0;
     let mut all_needed: u64 = 0;
@@ -46,6 +47,7 @@ fn derive_named_struct(
             all = all | bit;
             if is_option {
                 options.push(ident.clone());
+                opt_ids.push(bit);
                 getters.push(quote! { #ident.and_then(::std::convert::identity) })
             } else {
                 all_needed = all_needed | bit;
@@ -66,13 +68,7 @@ fn derive_named_struct(
             {
                 let mut __seen: u64 = 0;
                 let mut __err: Option<::simd_json::Error> = None;
-                let mut __res: Self = unsafe {
-                    let mut __res: Self = ::std::mem::MaybeUninit::uninit().assume_init();
-                    #(
-                        ::std::ptr::write(&mut __res.#options, None);
-                    )*
-                    __res
-                 };
+                let mut __res: Self = unsafe{::std::mem::MaybeUninit::uninit().assume_init()};
                 let __deser_size: usize = if let Some(::simd_json::Node::Object(size, _)) = __deser_tape.next() {
                     size
                 } else {
@@ -100,8 +96,9 @@ fn derive_named_struct(
                                 },
                                 )*
                                 _ => {
-                                    panic!()
-                                    // FIXME: skip
+                                    // FIXME: this should be togglable
+                                    __err = Some(::simd_json::Error::generic(::simd_json::ErrorType::ExpectedMap));
+                                    break
                                 }
                             }
                         },
@@ -111,21 +108,31 @@ fn derive_named_struct(
                     }
                 }
                 if (__seen & #all_needed) != #all_needed && __err.is_none() {
-                    dbg!(__seen, #all_needed);
                     __err = Some(::simd_json::Error::generic(::simd_json::ErrorType::ExpectedMap))
                 }
 
                 if let Some(e) = __err {
                     unsafe{
+                        let #ident {
+                            #(
+                                #values,
+                            )*
+                        } = __res;
                         #(
-                        if #ids & __seen != 0 {
-                            ::std::ptr::read(&(__res.#values));
+                        if #ids & __seen == 0 {
+                            ::std::mem::forget(#values);
                         };
                         )*
-                        ::std::mem::forget(__res);
                     }
                     Err(e)
                 } else {
+                    unsafe {
+                        #(
+                        if #opt_ids & __seen == 0 {
+                            ::std::ptr::write(&mut __res.#options, None);
+                        };
+                        )*
+                    }
                     Ok( __res )
                 }
 
