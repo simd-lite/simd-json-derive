@@ -212,7 +212,7 @@ where
 
 impl<K, V, H> Serialize for collections::HashMap<K, V, H>
 where
-    K: AsRef<str>,
+    K: SerializeAsKey,
     V: Serialize,
     H: std::hash::BuildHasher,
 {
@@ -226,7 +226,6 @@ where
             if let Err(e) = writer.write_all(b"{") {
                 return Err(e);
             };
-            let k: &str = k.as_ref();
             if let Err(e) = k.json_write(writer) {
                 return Err(e);
             };
@@ -240,7 +239,6 @@ where
                 if let Err(e) = writer.write_all(b",") {
                     return Err(e);
                 };
-                let k: &str = k.as_ref();
                 if let Err(e) = k.json_write(writer) {
                     return Err(e);
                 };
@@ -284,7 +282,7 @@ where
 
 impl<K, V> Serialize for collections::BTreeMap<K, V>
 where
-    K: AsRef<str>,
+    K: SerializeAsKey,
     V: Serialize,
 {
     #[inline]
@@ -297,7 +295,6 @@ where
             if let Err(e) = writer.write_all(b"{") {
                 return Err(e);
             };
-            let k: &str = k.as_ref();
             if let Err(e) = k.json_write(writer) {
                 return Err(e);
             };
@@ -311,7 +308,6 @@ where
                 if let Err(e) = writer.write_all(b",") {
                     return Err(e);
                 };
-                let k: &str = k.as_ref();
                 if let Err(e) = k.json_write(writer) {
                     return Err(e);
                 };

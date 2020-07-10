@@ -18,11 +18,9 @@ impl Deserialize for String {
     {
         match tape.next() {
             Some(simd_json::Node::String(s)) => Ok(String::from(s)),
-            _ => {
-                Err(simd_json::Error::generic(
-                    simd_json::ErrorType::ExpectedString,
-                ))
-            }
+            _ => Err(simd_json::Error::generic(
+                simd_json::ErrorType::ExpectedString,
+            )),
         }
     }
 }

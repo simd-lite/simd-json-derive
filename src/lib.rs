@@ -27,11 +27,28 @@ pub trait Serialize {
     }
 }
 
+pub trait SerializeAsKey {
+    fn json_write<W>(&self, writer: &mut W) -> Result
+    where
+        W: Write;
+}
+impl<T: AsRef<str>> SerializeAsKey for T {
+    #[inline]
+    fn json_write<W>(&self, writer: &mut W) -> Result
+    where
+        W: Write,
+    {
+        let s: &str = self.as_ref();
+        s.json_write(writer)
+    }
+}
+
 pub trait Deserialize {
     fn from_tape<'input>(tape: &mut Tape<'input>) -> simd_json::Result<Self>
     where
         Self: std::marker::Sized + 'input;
 
+    #[inline]
     fn from_slice<'input>(json: &'input mut [u8]) -> simd_json::Result<Self>
     where
         Self: std::marker::Sized + 'input,

@@ -21,10 +21,10 @@ fn derive_named_struct(
     let mut values = Vec::new();
     let mut getters = Vec::new();
     let mut options = Vec::new();
-    // let mut ids = Vec::new();
-    // let mut id = 1;
-    // let mut all = 0;
-    // let mut all_needed = 0;
+    let mut ids = Vec::new();
+    let mut id: u64 = 1;
+    let mut all: u64 = 0;
+    let mut all_needed: u64 = 0;
     for f in &fields {
         let mut is_option = false;
         if let Type::Path(TypePath {
@@ -41,29 +41,31 @@ fn derive_named_struct(
             name(&attrs, f).and_then(|name| Some((name, f.ident.as_ref()?.clone())))
         {
             let name = name.trim_matches(':').trim_matches('"').to_string();
-            // let bit = 1 << id;
-            // id += 1;
-            // let all = all || bit;
+            let bit = 1 << id;
+            id += 1;
+            all = all | bit;
             if is_option {
                 options.push(ident.clone());
                 getters.push(quote! { #ident.and_then(::std::convert::identity) })
             } else {
-                // let all_needed = all_needed || bit;
+                all_needed = all_needed | bit;
                 getters.push(quote! { #ident.expect(concat!("failed to get field ", #name))  })
             }
             keys.push(name);
             values.push(ident);
-            // ids.push(bit);
+            ids.push(bit);
         }
     }
 
     let expanded = quote! {
         impl #generics ::simd_json_derive::Deserialize for #ident #generics {
             #[inline]
-            fn from_tape<'input>(__deser_tape: &mut ::simd_json_derive::Tape<'input>) -> simd_json::Result<Self>
+            fn from_tape<'input>(__deser_tape: &mut ::simd_json_derive::Tape<'input>) -> ::simd_json::Result<Self>
             where
                 Self: std::marker::Sized + 'input
             {
+                let mut __seen: u64 = 0;
+                let mut __err: Option<::simd_json::Error> = None;
                 let mut __res: Self = unsafe {
                     let mut __res: Self = ::std::mem::MaybeUninit::uninit().assume_init();
                     #(
@@ -74,25 +76,28 @@ fn derive_named_struct(
                 let __deser_size: usize = if let Some(::simd_json::Node::Object(size, _)) = __deser_tape.next() {
                     size
                 } else {
+                    ::std::mem::forget(__res);
                     return Err(::simd_json::Error::generic(::simd_json::ErrorType::ExpectedMap));
                 };
+
                 for _ in 0..__deser_size {
                     match __deser_tape.next() {
-                        Some(simd_json::Node::String(__deser_key)) =>  {
+                        Some(::simd_json::Node::String(__deser_key)) =>  {
                             match __deser_key {
                                 #(
-                                    #keys => {
-                                        match ::simd_json_derive::Deserialize::from_tape(__deser_tape) {
-                                            Ok(v) => unsafe {
-                                                ::std::ptr::write(&mut __res.#values, v);
-                                            }
-                                            Err(e) => {
-                                                // FIXME
-                                                return Err(e);
-                                            }
+                                #keys => {
+                                    match ::simd_json_derive::Deserialize::from_tape(__deser_tape) {
+                                        Ok(v) => unsafe {
+                                            __seen |= #ids;
+                                            ::std::ptr::write(&mut __res.#values, v);
                                         }
+                                        Err(e) => {
+                                            __err = Some(e);
+                                            break
+                                        }
+                                    }
 
-                                    },
+                                },
                                 )*
                                 _ => {
                                     panic!()
@@ -105,9 +110,26 @@ fn derive_named_struct(
                         }
                     }
                 }
+                if (__seen & #all_needed) != #all_needed && __err.is_none() {
+                    dbg!(__seen, #all_needed);
+                    __err = Some(::simd_json::Error::generic(::simd_json::ErrorType::ExpectedMap))
+                }
+
+                if let Some(e) = __err {
+                    unsafe{
+                        #(
+                        if #ids & __seen != 0 {
+                            ::std::ptr::read(&(__res.#values));
+                        };
+                        )*
+                        ::std::mem::forget(__res);
+                    }
+                    Err(e)
+                } else {
+                    Ok( __res )
+                }
 
 
-                Ok( __res )
             }
         }
     };
