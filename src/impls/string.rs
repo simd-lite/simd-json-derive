@@ -10,9 +10,9 @@ impl Serialize for String {
     }
 }
 
-impl Deserialize for String {
+impl<'input> Deserialize<'input> for String {
     #[inline]
-    fn from_tape<'input>(tape: &mut Tape<'input>) -> simd_json::Result<Self>
+    fn from_tape(tape: &mut Tape<'input>) -> simd_json::Result<Self>
     where
         Self: std::marker::Sized + 'input,
     {
@@ -36,9 +36,9 @@ impl Serialize for str {
 }
 
 // Figure this out.
-// impl Deserialize for str {
+// impl<'input> Deserialize<'input> for str {
 //     #[inline]
-//     fn from_tape<'input>(
+//     fn from_tape(
 //         tape: &mut Tape<'input>,
 //     ) -> simd_json::Result<Self>
 //     where

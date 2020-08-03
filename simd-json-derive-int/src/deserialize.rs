@@ -1,11 +1,11 @@
 use proc_macro::{self, TokenStream};
-use proc_macro2::{Ident, Span};
+use proc_macro2::Ident;
 use quote::quote;
-use simd_json::prelude::*;
 use syn::token::Comma;
 use syn::{
     parse_macro_input, punctuated::Punctuated, Data, DataEnum, DataStruct, DeriveInput, Field,
-    Fields, FieldsNamed, FieldsUnnamed, Generics, Path, PathSegment, Type, TypePath, Variant,
+    Fields, FieldsNamed, FieldsUnnamed, GenericParam, Generics, Path, PathSegment, Type, TypePath,
+    Variant,
 };
 
 use crate::args::*;
@@ -26,6 +26,12 @@ fn derive_named_struct(
     let mut id: u64 = 1;
     let mut all: u64 = 0;
     let mut all_needed: u64 = 0;
+    let params = &generics.params;
+    let (all_generics, derive_lt) = match params.first() {
+        None => (quote! { <'input> }, quote! { 'input }),
+        Some(GenericParam::Lifetime(lifetime)) => (quote! { <#params> }, quote! { #lifetime }),
+        Some(_) => (quote! { <'input, #params> }, quote! { 'input }),
+    };
     for f in &fields {
         let mut is_option = false;
         if let Type::Path(TypePath {
@@ -60,11 +66,11 @@ fn derive_named_struct(
     }
 
     let expanded = quote! {
-        impl #generics ::simd_json_derive::Deserialize for #ident #generics {
+        impl #all_generics ::simd_json_derive::Deserialize <#derive_lt> for #ident #generics {
             #[inline]
-            fn from_tape<'input>(__deser_tape: &mut ::simd_json_derive::Tape<'input>) -> ::simd_json::Result<Self>
+            fn from_tape(__deser_tape: &mut ::simd_json_derive::Tape <#derive_lt>) -> ::simd_json::Result<Self>
             where
-                Self: std::marker::Sized + 'input
+                Self: std::marker::Sized + #derive_lt
             {
                 let mut __seen: u64 = 0;
                 let mut __err: Option<::simd_json::Error> = None;
@@ -143,21 +149,131 @@ fn derive_named_struct(
     TokenStream::from(expanded)
 }
 
+fn derive_unnamed_struct(
+    _attrs: StructAttrs,
+    ident: Ident,
+    generics: Generics,
+    fields: Punctuated<Field, Comma>,
+) -> proc_macro::TokenStream {
+    let params = &generics.params;
+    let (all_generics, derive_lt) = match params.first() {
+        None => (quote! { <'input> }, quote! { 'input }),
+        Some(GenericParam::Lifetime(lifetime)) => (quote! { <#params> }, quote! { #lifetime }),
+        Some(_) => (quote! { <'input, #params> }, quote! { 'input }),
+    };
+
+    if fields.len() == 1 {
+        // This is a newtype
+
+        let expanded = quote! {
+            impl #all_generics ::simd_json_derive::Deserialize <#derive_lt> for #ident #generics {
+                #[inline]
+                fn from_tape(__deser_tape: &mut ::simd_json_derive::Tape<#derive_lt>) -> ::simd_json::Result<Self>
+                where
+                    Self: std::marker::Sized + #derive_lt
+                {
+                    match ::simd_json_derive::Deserialize::from_tape(__deser_tape) {
+                        Ok(__inner) => Ok(Self(__inner)),
+                        Err(e) => Err(e)
+                    }
+                }
+            }
+        };
+        TokenStream::from(expanded)
+    } else {
+        unimplemented!("Only newtype unnamed structs are supported by now")
+    }
+}
+
+fn derive_enum(
+    _attrs: StructAttrs,
+    ident: Ident,
+    generics: Generics,
+    data: DataEnum,
+) -> proc_macro::TokenStream {
+    let params = &generics.params;
+    let (all_generics, derive_lt) = match params.first() {
+        None => (quote! { <'input> }, quote! { 'input }),
+        Some(GenericParam::Lifetime(lifetime)) => (quote! { <#params> }, quote! { #lifetime }),
+        Some(_) => (quote! { <'input, #params> }, quote! { 'input }),
+    };
+
+    // let mut body_elements = Vec::new();
+    let variants = data.variants;
+    let (simple, variants): (Vec<_>, Vec<_>) =
+        variants.into_iter().partition(|v| v.fields.is_empty());
+    let (named, unnamed): (Vec<_>, Vec<_>) = variants.iter().partition(|v| {
+        if let Variant {
+            fields: Fields::Named(_),
+            ..
+        } = v
+        {
+            true
+        } else {
+            false
+        }
+    });
+
+    let (unnamed1, unnamed): (Vec<_>, Vec<_>) =
+        unnamed.into_iter().partition(|v| v.fields.len() == 1);
+    if !named.is_empty() {
+        panic!("enum variants with named fields are not supported");
+    }
+    if !unnamed.is_empty() || !unnamed1.is_empty() {
+        panic!("enum variants with named fields are not supported");
+    }
+
+    let (simple_keys, simple_values): (Vec<_>, Vec<_>) = simple
+        .iter()
+        .map(|s| (&s.ident, s.ident.to_string()))
+        .unzip();
+    let simple = quote! {
+        #(
+            Some(::simd_json::Node::String(#simple_values)) => Ok(#ident::#simple_keys)
+        ),*
+    };
+    let expanded = quote! {
+        impl #all_generics ::simd_json_derive::Deserialize <#derive_lt> for #ident #generics {
+            #[inline]
+            fn from_tape(__deser_tape: &mut ::simd_json_derive::Tape<#derive_lt>) -> ::simd_json::Result<Self>
+            where
+                Self: std::marker::Sized + #derive_lt
+            {
+                match __deser_tape.next() {
+                    #simple,
+                    Some(__other) => Err(::simd_json::Error::generic(::simd_json::ErrorType::ExpectedMap)), // FIXME
+                    None => Err(::simd_json::Error::generic(::simd_json::ErrorType::ExpectedMap)) // FIXME
+                }
+            }
+        }
+    };
+    TokenStream::from(expanded)
+}
+
 pub(crate) fn derive(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     match input {
-        // // Unnamed struct
-        // DeriveInput {
-        //     ident,
-        //     data:
-        //         Data::Struct(DataStruct {
-        //             fields: Fields::Unnamed(FieldsUnnamed { unnamed, .. }),
-        //             ..
-        //         }),
-        //     generics,
-        //     ..
-        // } => derive_unnamed_struct(ident, generics, unnamed),
-        // Named
+        // Unnamed
+        DeriveInput {
+            ident,
+            attrs,
+            data:
+                Data::Struct(DataStruct {
+                    fields: Fields::Unnamed(FieldsUnnamed { unnamed, .. }),
+                    ..
+                }),
+            generics,
+            ..
+        } => {
+            let attrs = if let Some(attrs) = get_attr(&attrs, "simd_json") {
+                struct_attrs(attrs)
+            } else if let Some(attrs) = get_attr(&attrs, "serde") {
+                struct_attrs(attrs)
+            } else {
+                StructAttrs::default()
+            };
+            derive_unnamed_struct(attrs, ident, generics, unnamed)
+        } // Named
         DeriveInput {
             ident,
             attrs,
@@ -178,12 +294,22 @@ pub(crate) fn derive(input: TokenStream) -> TokenStream {
             };
             derive_named_struct(attrs, ident, generics, named)
         }
-        // DeriveInput {
-        //     ident,
-        //     data: Data::Enum(data),
-        //     generics,
-        //     ..
-        // } => derive_enum(ident, data, generics),
-        _ => TokenStream::from(quote! {}),
+        DeriveInput {
+            ident,
+            attrs,
+            data: Data::Enum(data),
+            generics,
+            ..
+        } => {
+            let attrs = if let Some(attrs) = get_attr(&attrs, "simd_json") {
+                struct_attrs(attrs)
+            } else if let Some(attrs) = get_attr(&attrs, "serde") {
+                struct_attrs(attrs)
+            } else {
+                StructAttrs::default()
+            };
+            derive_enum(attrs, ident, generics, data)
+        }
+        _ => unimplemented!("This was trying to derive something odd"),
     }
 }

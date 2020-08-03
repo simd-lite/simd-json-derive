@@ -43,13 +43,13 @@ impl<T: AsRef<str>> SerializeAsKey for T {
     }
 }
 
-pub trait Deserialize {
-    fn from_tape<'input>(tape: &mut Tape<'input>) -> simd_json::Result<Self>
+pub trait Deserialize<'input> {
+    fn from_tape(tape: &mut Tape<'input>) -> simd_json::Result<Self>
     where
         Self: std::marker::Sized + 'input;
 
     #[inline]
-    fn from_slice<'input>(json: &'input mut [u8]) -> simd_json::Result<Self>
+    fn from_slice(json: &'input mut [u8]) -> simd_json::Result<Self>
     where
         Self: std::marker::Sized + 'input,
     {
@@ -60,7 +60,7 @@ pub trait Deserialize {
     }
 
     #[inline]
-    fn from_str<'input>(json: &'input mut str) -> simd_json::Result<Self>
+    fn from_str(json: &'input mut str) -> simd_json::Result<Self>
     where
         Self: std::marker::Sized + 'input,
     {

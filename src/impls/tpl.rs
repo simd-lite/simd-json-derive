@@ -10,9 +10,9 @@ impl Serialize for () {
     }
 }
 
-impl Deserialize for () {
+impl<'input> Deserialize<'input> for () {
     #[inline]
-    fn from_tape<'input>(tape: &mut Tape<'input>) -> simd_json::Result<Self>
+    fn from_tape(tape: &mut Tape<'input>) -> simd_json::Result<Self>
     where
         Self: std::marker::Sized + 'input,
     {
@@ -56,12 +56,12 @@ macro_rules! tuple_impls {
                     writer.write_all(b"]")
                 }
             }
-            impl<$($name),+> Deserialize for ($($name,)+)
+            impl<'input, $($name),+> Deserialize<'input> for ($($name,)+)
             where
-                $($name: Deserialize,)+
+                $($name: Deserialize<'input>,)+
             {
                 #[inline]
-                fn from_tape<'input>(tape: &mut Tape<'input>) -> simd_json::Result<Self>
+                fn from_tape(tape: &mut Tape<'input>) -> simd_json::Result<Self>
                 where
                     Self: std::marker::Sized + 'input,
                 {

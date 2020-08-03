@@ -15,9 +15,9 @@ impl Serialize for bool {
     }
 }
 
-impl Deserialize for bool {
+impl<'input> Deserialize<'input> for bool {
     #[inline]
-    fn from_tape<'input>(tape: &mut Tape<'input>) -> simd_json::Result<Self>
+    fn from_tape(tape: &mut Tape<'input>) -> simd_json::Result<Self>
     where
         Self: std::marker::Sized + 'input,
     {
@@ -43,9 +43,9 @@ macro_rules! itoa {
             }
         }
 
-        impl Deserialize for $t {
+        impl<'input> Deserialize<'input> for $t {
             #[inline]
-            fn from_tape<'input>(tape: &mut Tape<'input>) -> simd_json::Result<Self>
+            fn from_tape(tape: &mut Tape<'input>) -> simd_json::Result<Self>
             where
                 Self: std::marker::Sized + 'input,
             {
@@ -111,9 +111,9 @@ macro_rules! ryu {
 ryu!(f64);
 ryu!(f32);
 
-impl Deserialize for f64 {
+impl<'input> Deserialize<'input> for f64 {
     #[inline]
-    fn from_tape<'input>(tape: &mut Tape<'input>) -> simd_json::Result<Self>
+    fn from_tape(tape: &mut Tape<'input>) -> simd_json::Result<Self>
     where
         Self: std::marker::Sized + 'input,
     {
@@ -132,9 +132,9 @@ impl Deserialize for f64 {
     }
 }
 
-impl Deserialize for f32 {
+impl<'input> Deserialize<'input> for f32 {
     #[inline]
-    fn from_tape<'input>(tape: &mut Tape<'input>) -> simd_json::Result<Self>
+    fn from_tape(tape: &mut Tape<'input>) -> simd_json::Result<Self>
     where
         Self: std::marker::Sized + 'input,
     {

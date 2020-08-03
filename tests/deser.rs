@@ -2,7 +2,7 @@ use simd_json_derive::{Deserialize, Serialize};
 
 // #[test]
 // fn unnamed1() {
-//     #[derive(simd_json_derive::Serialize)]
+//     #[derive(Serialize)]
 //     struct Bla(u8);
 //     let b = Bla(1);
 //     println!("{}", b.json_string().unwrap());
@@ -10,7 +10,7 @@ use simd_json_derive::{Deserialize, Serialize};
 // }
 // #[test]
 // fn unnamed2() {
-//     #[derive(simd_json_derive::Serialize)]
+//     #[derive(Serialize)]
 //     struct Bla(u8, u16);
 //     let b = Bla(1, 2);
 //     println!("{}", b.json_string().unwrap());
@@ -19,29 +19,38 @@ use simd_json_derive::{Deserialize, Serialize};
 
 #[test]
 fn deser() {
-    #[derive(simd_json_derive::Serialize, simd_json_derive::Deserialize, PartialEq, Debug)]
+    #[derive(Serialize, Deserialize, PartialEq, Debug)]
+    enum SnotBadger {
+        Snot,
+        Badger,
+    }
+    #[derive(Serialize, Deserialize, PartialEq, Debug)]
     struct Bla {
         f1: Option<u8>,
         f2: String,
+        f3: SnotBadger,
     };
 
     let b = Bla {
         f1: Some(1),
         f2: "snot".into(),
+        f3: SnotBadger::Snot,
     };
     let mut s = b.json_string().unwrap();
     println!("{}", s);
-    assert_eq!(r#"{"f1":1,"f2":"snot"}"#, s);
+    assert_eq!(r#"{"f1":1,"f2":"snot","f3":"Snot"}"#, s);
     let b1 = Bla::from_str(s.as_mut_str()).unwrap();
     assert_eq!(b, b1);
 }
 
 #[test]
 fn opt() {
-    #[derive(simd_json_derive::Deserialize, Debug, PartialEq)]
+    #[derive(Deserialize, Debug, PartialEq)]
+    struct MyString(String);
+    #[derive(Deserialize, Debug, PartialEq)]
     struct Bla {
         logo: Option<String>,
-        name: String,
+        name: MyString,
     };
 
     let mut s = String::from(r#"{"name":"snot"}"#);
@@ -50,7 +59,7 @@ fn opt() {
         b,
         Bla {
             logo: None,
-            name: "snot".into()
+            name: MyString("snot".into())
         }
     );
 
@@ -60,7 +69,7 @@ fn opt() {
         b,
         Bla {
             logo: None,
-            name: "snot".into()
+            name: MyString("snot".into())
         }
     );
 
@@ -70,7 +79,7 @@ fn opt() {
         b,
         Bla {
             logo: Some("badger".into()),
-            name: "snot".into()
+            name: MyString("snot".into())
         }
     );
 
@@ -86,10 +95,29 @@ fn opt() {
     let mut s = String::from(r#"{"name":"snot", "logo": "badger", "snot":42}"#);
     assert!(Bla::from_str(s.as_mut_str()).is_err());
 }
+#[test]
+fn event() {
+    #[derive(Deserialize, Debug, PartialEq)]
+    struct Ids(Vec<(u64, u64)>);
 
+    #[derive(Deserialize, Debug, PartialEq)]
+    struct Event {
+        id: Ids,
+    }
+
+    let mut s = String::from(r#"{"id":[[0,0]]}"#);
+    let e = Event::from_str(s.as_mut_str()).unwrap();
+
+    assert_eq!(
+        e,
+        Event {
+            id: Ids(vec![(0, 0)]),
+        }
+    );
+}
 // #[test]
 // fn unnamed1_lifetime() {
-//     #[derive(simd_json_derive::Serialize)]
+//     #[derive(Serialize)]
 //     struct BlaU1L<'a>(&'a str);
 //     let b = BlaU1L("snot");
 //     println!("{}", b.json_string().unwrap());
@@ -98,7 +126,7 @@ fn opt() {
 
 // #[test]
 // fn unnamed2_lifetime() {
-//     #[derive(simd_json_derive::Serialize)]
+//     #[derive(Serialize)]
 //     struct BlaU2L<'a, 'b>(&'a str, &'b str);
 //     let b = BlaU2L("hello", "world");
 //     println!("{}", b.json_string().unwrap());
@@ -107,7 +135,7 @@ fn opt() {
 
 // #[test]
 // fn named_lifetime() {
-//     #[derive(simd_json_derive::Serialize)]
+//     #[derive(Serialize)]
 //     struct BlaN2L<'a, 'b> {
 //         f1: &'a str,
 //         f2: &'b str,

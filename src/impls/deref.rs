@@ -1,11 +1,11 @@
 use crate::*;
 
-impl<T> Deserialize for Box<T>
+impl<'input, T> Deserialize<'input> for Box<T>
 where
-    T: Deserialize,
+    T: Deserialize<'input>,
 {
     #[inline]
-    fn from_tape<'input>(tape: &mut Tape<'input>) -> simd_json::Result<Self>
+    fn from_tape(tape: &mut Tape<'input>) -> simd_json::Result<Self>
     where
         Self: std::marker::Sized + 'input,
     {

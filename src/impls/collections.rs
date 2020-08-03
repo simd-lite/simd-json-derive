@@ -37,12 +37,12 @@ macro_rules! vec_like {
 }
 
 vec_like!(Vec<T>);
-impl<T> Deserialize for Vec<T>
+impl<'input, T> Deserialize<'input> for Vec<T>
 where
-    T: Deserialize,
+    T: Deserialize<'input>,
 {
     #[inline]
-    fn from_tape<'input>(tape: &mut Tape<'input>) -> simd_json::Result<Self>
+    fn from_tape(tape: &mut Tape<'input>) -> simd_json::Result<Self>
     where
         Self: std::marker::Sized + 'input,
     {
@@ -63,12 +63,12 @@ where
 
 vec_like!([T]);
 vec_like!(collections::VecDeque<T>);
-impl<T> Deserialize for collections::VecDeque<T>
+impl<'input, T> Deserialize<'input> for collections::VecDeque<T>
 where
-    T: Deserialize,
+    T: Deserialize<'input>,
 {
     #[inline]
-    fn from_tape<'input>(tape: &mut Tape<'input>) -> simd_json::Result<Self>
+    fn from_tape(tape: &mut Tape<'input>) -> simd_json::Result<Self>
     where
         Self: std::marker::Sized + 'input,
     {
@@ -86,12 +86,12 @@ where
     }
 }
 vec_like!(collections::BinaryHeap<T>);
-impl<T> Deserialize for collections::BinaryHeap<T>
+impl<'input, T> Deserialize<'input> for collections::BinaryHeap<T>
 where
-    T: Deserialize + Ord,
+    T: Deserialize<'input> + Ord,
 {
     #[inline]
-    fn from_tape<'input>(tape: &mut Tape<'input>) -> simd_json::Result<Self>
+    fn from_tape(tape: &mut Tape<'input>) -> simd_json::Result<Self>
     where
         Self: std::marker::Sized + 'input,
     {
@@ -109,12 +109,12 @@ where
     }
 }
 vec_like!(collections::BTreeSet<T>);
-impl<T> Deserialize for collections::BTreeSet<T>
+impl<'input, T> Deserialize<'input> for collections::BTreeSet<T>
 where
-    T: Deserialize + Ord,
+    T: Deserialize<'input> + Ord,
 {
     #[inline]
-    fn from_tape<'input>(tape: &mut Tape<'input>) -> simd_json::Result<Self>
+    fn from_tape(tape: &mut Tape<'input>) -> simd_json::Result<Self>
     where
         Self: std::marker::Sized + 'input,
     {
@@ -132,12 +132,12 @@ where
     }
 }
 vec_like!(collections::LinkedList<T>);
-impl<T> Deserialize for collections::LinkedList<T>
+impl<'input, T> Deserialize<'input> for collections::LinkedList<T>
 where
-    T: Deserialize + Ord,
+    T: Deserialize<'input> + Ord,
 {
     #[inline]
-    fn from_tape<'input>(tape: &mut Tape<'input>) -> simd_json::Result<Self>
+    fn from_tape(tape: &mut Tape<'input>) -> simd_json::Result<Self>
     where
         Self: std::marker::Sized + 'input,
     {
@@ -186,13 +186,13 @@ where
         }
     }
 }
-impl<T, H> Deserialize for collections::HashSet<T, H>
+impl<'input, T, H> Deserialize<'input> for collections::HashSet<T, H>
 where
-    T: Deserialize + std::hash::Hash + Eq,
+    T: Deserialize<'input> + std::hash::Hash + Eq,
     H: std::hash::BuildHasher + Default,
 {
     #[inline]
-    fn from_tape<'input>(tape: &mut Tape<'input>) -> simd_json::Result<Self>
+    fn from_tape(tape: &mut Tape<'input>) -> simd_json::Result<Self>
     where
         Self: std::marker::Sized + 'input,
     {
@@ -256,14 +256,14 @@ where
     }
 }
 
-impl<K, V, H> Deserialize for collections::HashMap<K, V, H>
+impl<'input, K, V, H> Deserialize<'input> for collections::HashMap<K, V, H>
 where
-    K: Deserialize + std::hash::Hash + Eq,
-    V: Deserialize,
+    K: Deserialize<'input> + std::hash::Hash + Eq,
+    V: Deserialize<'input>,
     H: std::hash::BuildHasher + Default,
 {
     #[inline]
-    fn from_tape<'input>(tape: &mut Tape<'input>) -> simd_json::Result<Self>
+    fn from_tape(tape: &mut Tape<'input>) -> simd_json::Result<Self>
     where
         Self: std::marker::Sized + 'input,
     {
@@ -324,13 +324,13 @@ where
         }
     }
 }
-impl<K, V> Deserialize for collections::BTreeMap<K, V>
+impl<'input, K, V> Deserialize<'input> for collections::BTreeMap<K, V>
 where
-    K: Deserialize + Ord,
-    V: Deserialize,
+    K: Deserialize<'input> + Ord,
+    V: Deserialize<'input>,
 {
     #[inline]
-    fn from_tape<'input>(tape: &mut Tape<'input>) -> simd_json::Result<Self>
+    fn from_tape(tape: &mut Tape<'input>) -> simd_json::Result<Self>
     where
         Self: std::marker::Sized + 'input,
     {
