@@ -68,9 +68,7 @@ impl<'input> Deserialize<'input> for OwnedValue {
     where
         Self: Sized + 'input,
     {
-        let mut deser = OwnedDeser(tape);
-        let res = deser.parse();
-        res
+        OwnedDeser(tape).parse()
     }
 }
 
@@ -123,8 +121,6 @@ impl<'input> Deserialize<'input> for BorrowedValue<'input> {
     where
         Self: Sized + 'input,
     {
-        let mut deser = BorrowedDeser(tape);
-        let res = deser.parse();
-        res
+        BorrowedDeser(tape).parse()
     }
 }
