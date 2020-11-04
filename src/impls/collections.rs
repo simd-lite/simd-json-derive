@@ -1,3 +1,5 @@
+use std::ops::Range;
+
 use crate::*;
 
 macro_rules! vec_like {
@@ -347,8 +349,79 @@ where
     }
 }
 
+impl<T> Serialize for Range<T>
+where
+    T: Serialize,
+{
+    #[inline]
+    fn json_write<W>(&self, writer: &mut W) -> Result
+    where
+        W: Write,
+    {
+        if let Err(e) = writer.write_all(b"{\"start\":") {
+            return Err(e);
+        };
+        if let Err(e) = self.start.json_write(writer) {
+            return Err(e);
+        }
+        if let Err(e) = writer.write_all(b",\"end\":") {
+            return Err(e);
+        };
+        if let Err(e) = self.end.json_write(writer) {
+            return Err(e);
+        }
+        writer.write_all(b"}")
+    }
+}
+
+impl<'input, T> Deserialize<'input> for Range<T>
+where
+    T: Deserialize<'input>,
+{
+    #[inline]
+    fn from_tape(tape: &mut Tape<'input>) -> simd_json::Result<Self>
+    where
+        Self: std::marker::Sized + 'input,
+    {
+        if let Some(simd_json::Node::Object(2, _)) = tape.next() {
+            match tape.next() {
+                Some(simd_json::Node::String("start")) => {
+                    let start = Deserialize::from_tape(tape)?;
+                    if let Some(simd_json::Node::String("end")) = tape.next() {
+                        let end = Deserialize::from_tape(tape)?;
+                        Ok(start..end)
+                    } else {
+                        // FIXME
+                        Err(simd_json::Error::generic(
+                            simd_json::ErrorType::ExpectedString,
+                        ))
+                    }
+                }
+                Some(simd_json::Node::String("end")) => {
+                    let end = Deserialize::from_tape(tape)?;
+                    if let Some(simd_json::Node::String("start")) = tape.next() {
+                        let start = Deserialize::from_tape(tape)?;
+                        Ok(start..end)
+                    } else {
+                        // FIXME
+                        Err(simd_json::Error::generic(
+                            simd_json::ErrorType::ExpectedString,
+                        ))
+                    }
+                }
+                _ => Err(simd_json::Error::generic(
+                    simd_json::ErrorType::ExpectedString,
+                )),
+            }
+        } else {
+            Err(simd_json::Error::generic(simd_json::ErrorType::ExpectedMap))
+        }
+    }
+}
 #[cfg(test)]
 mod test {
+    use std::ops::Range;
+
     use crate::*;
     #[test]
     fn vec() {
@@ -372,5 +445,14 @@ mod test {
         assert_eq!(s, "[1,2,3]");
         let s: Vec<u8> = Vec::from_str(s.as_mut_str()).unwrap();
         assert_eq!(s, v);
+    }
+
+    #[test]
+    fn range() {
+        let r = 1..42;
+        let mut v = r.json_vec().unwrap();
+        assert_eq!(br#"{"start":1,"end":42}"#, v.as_slice());
+        let r1 = Range::from_slice(v.as_mut_slice()).unwrap();
+        assert_eq!(r, r1);
     }
 }
