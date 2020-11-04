@@ -218,7 +218,10 @@ fn derive_enum(
     let (unnamed1, unnamed): (Vec<_>, Vec<_>) =
         unnamed.into_iter().partition(|v| v.fields.len() == 1);
     if !named.is_empty() {
-        panic!("enum variants with named fields are not supported");
+        panic!(
+            "ENUM variants with named fields are not supported: {:?}",
+            named
+        );
     }
     let (unnamed_keys, unnamed_values): (Vec<_>, Vec<_>) = unnamed
         .iter()
