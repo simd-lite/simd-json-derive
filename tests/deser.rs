@@ -115,6 +115,25 @@ fn event() {
         }
     );
 }
+
+#[test]
+fn enum_ser() {
+    #[derive(Deserialize, PartialEq, Debug)]
+    pub enum StoredVariants {
+        YesNo(bool),
+        Small(u8, i8),
+        Signy(i64),
+        Stringy(String),
+    }
+
+    let mut s = String::from(r#"{"Small":[1,2]}"#);
+    let e = StoredVariants::from_str(s.as_mut_str()).unwrap();
+    assert_eq!(StoredVariants::Small(1, 2), e);
+
+    let mut s = String::from(r#"{"YesNo":true}"#);
+    let e = StoredVariants::from_str(s.as_mut_str()).unwrap();
+    assert_eq!(StoredVariants::YesNo(true), e);
+}
 // #[test]
 // fn unnamed1_lifetime() {
 //     #[derive(Serialize)]

@@ -56,3 +56,20 @@ fn enum_stuff_01_lifeimte() {
     let b = Bla::Gobble { k1: 2, k2: 3 };
     assert_eq!(r#"{"Gobble":{"k1":2,"k2":3}}"#, b.json_string().unwrap());
 }
+
+#[test]
+fn enum_ser() {
+    #[derive(Serialize)]
+    pub enum StoredVariants {
+        YesNo(bool),
+        Small(u8, i8),
+    }
+
+    let d = StoredVariants::YesNo(true);
+    assert_eq!(r#"{"YesNo":true}"#, d.json_string().unwrap());
+
+    let d = StoredVariants::Small(1, 2);
+    assert_eq!(r#"{"Small":[1,2]}"#, d.json_string().unwrap());
+
+    // let e = StoredVariants::from_str(s.as_mut_str()).unwrap();
+}

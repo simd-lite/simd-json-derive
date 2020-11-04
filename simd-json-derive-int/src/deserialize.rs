@@ -1,6 +1,6 @@
 use proc_macro::{self, TokenStream};
 use proc_macro2::Ident;
-use quote::quote;
+use quote::{format_ident, quote};
 use syn::token::Comma;
 use syn::{
     parse_macro_input, punctuated::Punctuated, Data, DataEnum, DataStruct, DeriveInput, Field,
@@ -220,9 +220,63 @@ fn derive_enum(
     if !named.is_empty() {
         panic!("enum variants with named fields are not supported");
     }
-    if !unnamed.is_empty() || !unnamed1.is_empty() {
-        panic!("enum variants with named fields are not supported");
-    }
+    let (unnamed_keys, unnamed_values): (Vec<_>, Vec<_>) = unnamed
+        .iter()
+        .map(|s| {
+            (
+                &s.ident,
+                (
+                    s.ident.to_string(),
+                    s.fields
+                        .iter()
+                        .enumerate()
+                        .map(|f| format_ident!("_unnamed_{}", f.0))
+                        .collect::<Vec<_>>(),
+                ),
+            )
+        })
+        .unzip();
+    let (unnamed_values, unnamed_fields): (Vec<_>, Vec<_>) = unnamed_values
+        .into_iter()
+        .map(|(v, f)| {
+            (
+                v,
+                (
+                    f.len(),
+                    quote! {
+                        #(
+                            {
+                                let #f = ::simd_json_derive::Deserialize::from_tape(__deser_tape)?;
+                                #f
+                            }
+                        ),*
+                    },
+                ),
+            )
+        })
+        .unzip();
+    let (unnamed_len, unnamed_fields): (Vec<_>, Vec<_>) = unnamed_fields.into_iter().unzip();
+    let unnamed = quote! {
+        #(
+            Some(::simd_json::Node::String(#unnamed_values)) => {
+                match __deser_tape.next() {
+                  Some(::simd_json::Node::Array(#unnamed_len, _)) => Ok(#ident::#unnamed_keys(#unnamed_fields)),
+                  _ => Err(::simd_json::Error::generic(::simd_json::ErrorType::ExpectedArray))   // FIXME
+                }
+
+           },
+        )*
+    };
+    // unnamed 1
+    let (unnamed1_keys, unnamed1_values): (Vec<_>, Vec<_>) = unnamed1
+        .iter()
+        .map(|s| (&s.ident, s.ident.to_string()))
+        .unzip();
+    let unnamed1 = quote! {
+        #(
+            Some(::simd_json::Node::String(#unnamed1_values)) => Ok(#ident::#unnamed1_keys(::simd_json_derive::Deserialize::from_tape(__deser_tape)?)),
+        )*
+    };
 
     let (simple_keys, simple_values): (Vec<_>, Vec<_>) = simple
         .iter()
@@ -230,8 +284,8 @@ fn derive_enum(
         .unzip();
     let simple = quote! {
         #(
-            Some(::simd_json::Node::String(#simple_values)) => Ok(#ident::#simple_keys)
-        ),*
+            Some(::simd_json::Node::String(#simple_values)) => Ok(#ident::#simple_keys),
+        )*
     };
     let expanded = quote! {
         impl #all_generics ::simd_json_derive::Deserialize <#derive_lt> for #ident #generics {
@@ -241,7 +295,15 @@ fn derive_enum(
                 Self: std::marker::Sized + #derive_lt
             {
                 match __deser_tape.next() {
-                    #simple,
+                    #simple
+                    Some(::simd_json::Node::Object(1, _)) => {
+                        match __deser_tape.next() {
+                            #unnamed1
+                            #unnamed
+                            Some(__other) => Err(::simd_json::Error::generic(::simd_json::ErrorType::ExpectedMap)), // FIXME
+                            None => Err(::simd_json::Error::generic(::simd_json::ErrorType::ExpectedMap)) // FIXME
+                        }
+                    },
                     Some(__other) => Err(::simd_json::Error::generic(::simd_json::ErrorType::ExpectedMap)), // FIXME
                     None => Err(::simd_json::Error::generic(::simd_json::ErrorType::ExpectedMap)) // FIXME
                 }
