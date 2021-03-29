@@ -1,6 +1,6 @@
 [package]
 name = "simd-json-derive-int"
-version = "0.1.4"
+version = "0.2.0"
 authors = ["Heinz N. Gies <heinz@licenser.net>"]
 edition = "2018"
 license = "Apache-2.0/MIT"
@@ -16,4 +16,4 @@ proc-macro = true
 proc-macro2 = "1.0"
 quote = "1.0"
 syn = { version = "1.0", features = ["visit", "extra-traits"] }
-simd-json = {version = "0.3", features = ["allow-non-simd"]}
+simd-json = {version = "0.4", features = ["allow-non-simd"]}
