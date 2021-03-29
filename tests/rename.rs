@@ -8,5 +8,5 @@ fn opt() {
         logo_name: Option<String>,
         #[serde(rename = "Name")]
         name: String,
-    };
+    }
 }

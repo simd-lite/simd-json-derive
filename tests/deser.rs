@@ -29,7 +29,7 @@ fn deser() {
         f1: Option<u8>,
         f2: String,
         f3: SnotBadger,
-    };
+    }
 
     let b = Bla {
         f1: Some(1),
@@ -51,7 +51,7 @@ fn opt() {
     struct Bla {
         logo: Option<String>,
         name: MyString,
-    };
+    }
 
     let mut s = String::from(r#"{"name":"snot"}"#);
     let b = Bla::from_str(s.as_mut_str()).unwrap();

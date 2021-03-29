@@ -29,7 +29,7 @@ impl<'input, 'tape> OwnedDeser<'input, 'tape> {
             Some(Node::String(s)) => Ok(OwnedValue::from(s)),
             Some(Node::Array(len, _)) => Ok(self.parse_array(len)),
             Some(Node::Object(len, _)) => Ok(self.parse_map(len)),
-            None => Err(simd_json::Error::generic(simd_json::ErrorType::EOF)),
+            None => Err(simd_json::Error::generic(simd_json::ErrorType::Eof)),
         }
     }
     #[inline(always)]
@@ -82,7 +82,7 @@ impl<'input, 'tape> BorrowedDeser<'input, 'tape> {
             Some(Node::String(s)) => Ok(BorrowedValue::from(s)),
             Some(Node::Array(len, _)) => Ok(self.parse_array(len)),
             Some(Node::Object(len, _)) => Ok(self.parse_map(len)),
-            None => Err(simd_json::Error::generic(simd_json::ErrorType::EOF)),
+            None => Err(simd_json::Error::generic(simd_json::ErrorType::Eof)),
         }
     }
     #[inline(always)]

@@ -8,7 +8,7 @@ fn enum_stuff_01() {
         Wobbble(u8),
         Wobbble2(u8, u16),
         Gobble { k1: u8, k2: u16 },
-    };
+    }
 
     let b = Bla::Blubb;
     assert_eq!(r#""Blubb""#, b.json_string().unwrap());
@@ -26,7 +26,7 @@ fn enum_stuff_02() {
     enum Bla {
         Blubb,
         Wobble,
-    };
+    }
 
     let b = Bla::Blubb;
     assert_eq!(r#""Blubb""#, b.json_string().unwrap());
@@ -42,7 +42,7 @@ fn enum_stuff_01_lifeimte() {
         Wobbble(&'a str),
         Wobbble2(&'a str, &'b str),
         Gobble { k1: u8, k2: u16 },
-    };
+    }
 
     let b = Bla::Blubb;
     assert_eq!(r#""Blubb""#, b.json_string().unwrap());

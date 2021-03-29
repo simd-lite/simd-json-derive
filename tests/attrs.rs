@@ -9,7 +9,7 @@ fn rename() {
         #[simd_json(rename = "f4")]
         f2: String,
         f5: u8,
-    };
+    }
 
     let b = Bla {
         f1: 1,
@@ -29,7 +29,7 @@ fn rename_all() {
         field_two: String,
         #[serde(rename = "f3")]
         field_three: u8,
-    };
+    }
 
     let b = Bla {
         field_one: 1,
