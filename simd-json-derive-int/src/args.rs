@@ -20,6 +20,7 @@ impl Parse for FieldAttrs {
 
                     rename = Some(name.to_string().trim_matches('"').to_string());
                 }
+                "borrow" => (),
                 other => {
                     return Err(syn::Error::new(
                         attr.span(),

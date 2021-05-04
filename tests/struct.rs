@@ -69,3 +69,21 @@ fn named_lifetime() {
     println!("{}", b.json_string().unwrap());
     assert_eq!(r#"{"f1":"snot","f2":"badger"}"#, b.json_string().unwrap())
 }
+
+#[test]
+fn borrowed() {
+    #[derive(simd_json_derive::Serialize, simd_json_derive::Deserialize, PartialEq, Debug)]
+    struct SIMDExample<'sin> {
+        id: u64,
+        #[serde(borrow)]
+        id_str: &'sin str,
+    };
+    let mut s = r#"{"id":23,"id_str":"42"}"#.to_string();
+    assert_eq!(
+        SIMDExample {
+            id: 23,
+            id_str: "42"
+        },
+        SIMDExample::from_str(s.as_mut_str()).unwrap()
+    );
+}
