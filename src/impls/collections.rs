@@ -418,6 +418,10 @@ where
         }
     }
 }
+
+#[cfg(feature = "impl-abi_stable")]
+vec_like!(abi_stable::std_types::RVec<T>);
+
 #[cfg(test)]
 mod test {
     use std::ops::Range;
