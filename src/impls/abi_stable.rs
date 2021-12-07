@@ -3,6 +3,7 @@ use abi_stable::std_types::{
     RHashMap,
     ROption::{self, RNone, RSome},
     RString, RVec, Tuple2,
+    RBox,
 };
 
 impl Serialize for RString {
@@ -156,5 +157,18 @@ where
         } else {
             Err(simd_json::Error::generic(simd_json::ErrorType::ExpectedMap))
         }
+    }
+}
+
+impl<'input, T> Deserialize<'input> for RBox<T>
+where
+    T: Deserialize<'input>,
+{
+    #[inline]
+    fn from_tape(tape: &mut Tape<'input>) -> simd_json::Result<Self>
+    where
+        Self: std::marker::Sized + 'input,
+    {
+        Ok(RBox::new(T::from_tape(tape)?))
     }
 }
