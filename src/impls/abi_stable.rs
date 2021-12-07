@@ -1,5 +1,9 @@
 use crate::*;
-use abi_stable::std_types::{RVec, RString, ROption::{self, RSome, RNone}};
+use abi_stable::std_types::{
+    RHashMap,
+    ROption::{self, RNone, RSome},
+    RString, RVec, Tuple2,
+};
 
 impl Serialize for RString {
     #[inline]
@@ -81,6 +85,76 @@ where
             _other => Err(simd_json::Error::generic(
                 simd_json::ErrorType::ExpectedArray,
             )),
+        }
+    }
+}
+
+impl<K, V, H> Serialize for RHashMap<K, V, H>
+where
+    K: SerializeAsKey,
+    V: Serialize,
+    H: std::hash::BuildHasher,
+{
+    #[inline]
+    fn json_write<W>(&self, writer: &mut W) -> Result
+    where
+        W: Write,
+    {
+        let mut i = self.iter();
+        if let Some(Tuple2(k, v)) = i.next() {
+            if let Err(e) = writer.write_all(b"{") {
+                return Err(e);
+            };
+            if let Err(e) = k.json_write(writer) {
+                return Err(e);
+            };
+            if let Err(e) = writer.write_all(b":") {
+                return Err(e);
+            };
+            if let Err(e) = v.json_write(writer) {
+                return Err(e);
+            };
+            for Tuple2(k, v) in i {
+                if let Err(e) = writer.write_all(b",") {
+                    return Err(e);
+                };
+                if let Err(e) = k.json_write(writer) {
+                    return Err(e);
+                };
+                if let Err(e) = writer.write_all(b":") {
+                    return Err(e);
+                };
+                if let Err(e) = v.json_write(writer) {
+                    return Err(e);
+                };
+            }
+            writer.write_all(b"}")
+        } else {
+            writer.write_all(b"{}")
+        }
+    }
+}
+
+impl<'input, K, V, H> Deserialize<'input> for RHashMap<K, V, H>
+where
+    K: Deserialize<'input> + std::hash::Hash + Eq,
+    V: Deserialize<'input>,
+    H: std::hash::BuildHasher + Default,
+{
+    #[inline]
+    fn from_tape(tape: &mut Tape<'input>) -> simd_json::Result<Self>
+    where
+        Self: std::marker::Sized + 'input,
+    {
+        if let Some(simd_json::Node::Object(size, _)) = tape.next() {
+            let mut v = RHashMap::with_capacity_and_hasher(size, H::default());
+            for _ in 0..size {
+                let k = K::from_tape(tape)?;
+                v.insert(k, V::from_tape(tape)?);
+            }
+            Ok(v)
+        } else {
+            Err(simd_json::Error::generic(simd_json::ErrorType::ExpectedMap))
         }
     }
 }

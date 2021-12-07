@@ -35,4 +35,10 @@ macro_rules! deref_impl {
 deref_impl!(<'a, T> Serialize for &'a T where T: ?Sized + Serialize);
 deref_impl!(<'a, T> Serialize for &'a mut T where T: ?Sized + Serialize);
 deref_impl!(<T: ?Sized> Serialize for Box<T> where T: Serialize);
+#[cfg(feature = "impl-abi_stable")]
+// TODO: make RBox `T: ?Sized`, upstream it
+deref_impl!(<T> Serialize for abi_stable::std_types::RBox<T> where T: Serialize);
 deref_impl!(<'a, T: ?Sized> Serialize for std::borrow::Cow<'a, T> where T: Serialize + ToOwned);
+#[cfg(feature = "impl-abi_stable")]
+// TODO: make BorrowOwned `T: Clone`, upstream it
+deref_impl!(<'a, T: ?Sized> Serialize for abi_stable::std_types::RCow<'a, T> where T: Serialize + ToOwned + std::clone::Clone);
