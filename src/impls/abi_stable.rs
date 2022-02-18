@@ -1,9 +1,8 @@
 use crate::*;
 use abi_stable::std_types::{
-    RHashMap,
+    RBox, RHashMap,
     ROption::{self, RNone, RSome},
     RString, RVec, Tuple2,
-    RBox,
 };
 
 impl Serialize for RString {
