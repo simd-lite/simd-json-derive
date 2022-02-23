@@ -40,8 +40,8 @@ deref_impl!(<T: ?Sized> Serialize for Box<T> where T: Serialize);
 deref_impl!(<T> Serialize for abi_stable::std_types::RBox<T> where T: Serialize);
 deref_impl!(<'a, T: ?Sized> Serialize for std::borrow::Cow<'a, T> where T: Serialize + ToOwned);
 #[cfg(feature = "impl-abi_stable")]
-deref_impl!(<'a, T> Serialize for abi_stable::std_types::BCow<'a, T> where T: Serialize + abi_stable::std_types::cow::IntoOwned);
+deref_impl!(<'a, T> Serialize for abi_stable::std_types::RCowVal<'a, T> where T: Serialize + abi_stable::traits::IntoOwned);
 #[cfg(feature = "impl-abi_stable")]
 deref_impl!(<'a> Serialize for abi_stable::std_types::RCowStr<'a>);
 #[cfg(feature = "impl-abi_stable")]
-deref_impl!(<'a, T> Serialize for abi_stable::std_types::RCowSlice<'a, T> where T: Serialize + abi_stable::std_types::cow::IntoOwned);
+deref_impl!(<'a, T> Serialize for abi_stable::std_types::RCowSlice<'a, T> where T: Serialize + abi_stable::traits::IntoOwned);
