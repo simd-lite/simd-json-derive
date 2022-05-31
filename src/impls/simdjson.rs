@@ -33,6 +33,7 @@ impl<'input, 'tape> OwnedDeser<'input, 'tape> {
         }
     }
     #[inline(always)]
+    #[allow(clippy::uninit_vec)]
     fn parse_array(&mut self, len: usize) -> OwnedValue {
         // Rust doens't optimize the normal loop away here
         // so we write our own avoiding the lenght
@@ -86,6 +87,7 @@ impl<'input, 'tape> BorrowedDeser<'input, 'tape> {
         }
     }
     #[inline(always)]
+    #[allow(clippy::uninit_vec)]
     fn parse_array(&mut self, len: usize) -> BorrowedValue<'input> {
         // Rust doens't optimize the normal loop away here
         // so we write our own avoiding the lenght
