@@ -2,7 +2,7 @@
 name = "simd-json-derive-int"
 version = "0.2.2-alpha.0"
 authors = ["Heinz N. Gies <heinz@licenser.net>"]
-edition = "2018"
+edition = "2021"
 license = "Apache-2.0/MIT"
 description = "procmacros for simd-json-derive"
 
@@ -11,9 +11,8 @@ description = "procmacros for simd-json-derive"
 [lib]
 proc-macro = true
 
-
 [dependencies]
 proc-macro2 = "1.0"
 quote = "1.0"
 syn = { version = "1.0", features = ["visit", "extra-traits"] }
-simd-json = {version = "0.4", features = ["allow-non-simd"]}
+simd-json = { version = "0.5", features = ["allow-non-simd"] }
