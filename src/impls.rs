@@ -1,3 +1,5 @@
+#[cfg(feature = "impl-abi_stable")]
+mod abi_stable;
 mod array;
 #[cfg(feature = "impl-chrono")]
 mod chrono;
