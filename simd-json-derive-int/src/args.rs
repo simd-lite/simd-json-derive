@@ -69,14 +69,14 @@ impl RenameAll {
 #[derive(Debug)]
 pub(crate) struct StructAttrs {
     rename_all: RenameAll,
-    deny_unknown_fields: bool,
+    // deny_unknown_fields: bool,
 }
 
 impl Default for StructAttrs {
     fn default() -> Self {
         StructAttrs {
             rename_all: RenameAll::None,
-            deny_unknown_fields: false,
+            // deny_unknown_fields: false,
         }
     }
 }
@@ -84,7 +84,7 @@ impl Default for StructAttrs {
 impl Parse for StructAttrs {
     fn parse(input: ParseStream) -> syn::Result<Self> {
         let mut rename_all = RenameAll::None;
-        let mut deny_unknown_fields = false;
+        let mut _deny_unknown_fields = false;
         while !input.is_empty() {
             let attr: Ident = input.parse()?;
             match attr.to_string().as_str() {
@@ -103,7 +103,7 @@ impl Parse for StructAttrs {
                     }
                 }
                 "deny_unknown_fields" => {
-                    deny_unknown_fields = true;
+                    _deny_unknown_fields = true;
                 }
                 other => {
                     return Err(syn::Error::new(
@@ -118,7 +118,7 @@ impl Parse for StructAttrs {
         }
         Ok(StructAttrs {
             rename_all,
-            deny_unknown_fields,
+            // deny_unknown_fields,
         })
     }
 }

@@ -69,6 +69,7 @@ fn derive_named_struct(
         impl #all_generics ::simd_json_derive::Deserialize <#derive_lt> for #ident #generics {
             #[inline]
             #[allow(clippy::forget_copy)]
+            #[allow(clippy::forget_non_drop)]
             fn from_tape(__deser_tape: &mut ::simd_json_derive::Tape <#derive_lt>) -> ::simd_json::Result<Self>
             where
                 Self: std::marker::Sized + #derive_lt

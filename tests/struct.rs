@@ -77,7 +77,7 @@ fn borrowed() {
         id: u64,
         #[serde(borrow)]
         id_str: &'sin str,
-    };
+    }
     let mut s = r#"{"id":23,"id_str":"42"}"#.to_string();
     assert_eq!(
         SIMDExample {
