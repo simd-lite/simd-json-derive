@@ -39,7 +39,9 @@ macro_rules! itoa {
             where
                 W: Write,
             {
-                itoa::write(writer, *self).map(|_| ())
+                let mut buffer = itoa::Buffer::new();
+                let s = buffer.format(*self);
+                writer.write_all(s.as_bytes())
             }
         }
 
@@ -67,7 +69,7 @@ macro_rules! itoa {
                         })
                     }
                     #[cfg(feature = "128bit")]
-                    Some(simd_json::Node::Static(simd_json::StaticNode::UI28(i))) => {
+                    Some(simd_json::Node::Static(simd_json::StaticNode::I128(i))) => {
                         <$t>::try_from(i).map_err(|_| {
                             simd_json::Error::generic(simd_json::ErrorType::ExpectedInteger)
                         })
@@ -124,7 +126,7 @@ impl<'input> Deserialize<'input> for f64 {
             #[cfg(feature = "128bit")]
             Some(simd_json::Node::Static(simd_json::StaticNode::U128(i))) => Ok(i as f64),
             #[cfg(feature = "128bit")]
-            Some(simd_json::Node::Static(simd_json::StaticNode::UI28(i))) => Ok(i as f64),
+            Some(simd_json::Node::Static(simd_json::StaticNode::I128(i))) => Ok(i as f64),
             _ => Err(simd_json::Error::generic(
                 simd_json::ErrorType::ExpectedFloat,
             )),
@@ -145,7 +147,7 @@ impl<'input> Deserialize<'input> for f32 {
             #[cfg(feature = "128bit")]
             Some(simd_json::Node::Static(simd_json::StaticNode::U128(i))) => Ok(i as f32),
             #[cfg(feature = "128bit")]
-            Some(simd_json::Node::Static(simd_json::StaticNode::UI28(i))) => Ok(i as f32),
+            Some(simd_json::Node::Static(simd_json::StaticNode::I128(i))) => Ok(i as f32),
             _ => Err(simd_json::Error::generic(
                 simd_json::ErrorType::ExpectedString,
             )),
