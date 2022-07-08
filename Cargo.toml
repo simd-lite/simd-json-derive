@@ -13,7 +13,7 @@ repository = "https://github.com/simd-lite/simd-json-derive/"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-simd-json-derive-int = { path = "./simd-json-derive-int", version = "0.3.0" }
+simd-json-derive-int = { path = "./simd-json-derive-int", version = "0.4.0" }
 value-trait = "0.4"
 itoa = "1"
 ryu = "1"
