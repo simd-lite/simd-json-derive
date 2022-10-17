@@ -25,19 +25,11 @@ macro_rules! array_impls {
                 {
                     let mut i = self.iter();
                     if let Some(first) = i.next() {
-                        if let Err(e) = writer.write_all(b"["){
-                            return Err(e);
-                        };
-                        if let Err(e) = first.json_write(writer){
-                            return Err(e);
-                        };
+                        writer.write_all(b"[")?;
+                        first.json_write(writer)?;
                         for e in i {
-                            if let Err(e) = writer.write_all(b","){
-                                return Err(e);
-                            };
-                            if let Err(e) = e.json_write(writer){
-                                return Err(e);
-                            };
+                            writer.write_all(b",")?;
+                            e.json_write(writer)?;
                         }
                         writer.write_all(b"]")
                     } else {

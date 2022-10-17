@@ -69,14 +69,14 @@ impl RenameAll {
 #[derive(Debug)]
 pub(crate) struct StructAttrs {
     rename_all: RenameAll,
-    // deny_unknown_fields: bool,
+    deny_unknown_fields: bool,
 }
 
 impl Default for StructAttrs {
     fn default() -> Self {
         StructAttrs {
             rename_all: RenameAll::None,
-            // deny_unknown_fields: false,
+            deny_unknown_fields: false,
         }
     }
 }
@@ -84,7 +84,7 @@ impl Default for StructAttrs {
 impl Parse for StructAttrs {
     fn parse(input: ParseStream) -> syn::Result<Self> {
         let mut rename_all = RenameAll::None;
-        let mut _deny_unknown_fields = false;
+        let mut deny_unknown_fields = false;
         while !input.is_empty() {
             let attr: Ident = input.parse()?;
             match attr.to_string().as_str() {
@@ -103,7 +103,7 @@ impl Parse for StructAttrs {
                     }
                 }
                 "deny_unknown_fields" => {
-                    _deny_unknown_fields = true;
+                    deny_unknown_fields = true;
                 }
                 other => {
                     return Err(syn::Error::new(
@@ -118,7 +118,7 @@ impl Parse for StructAttrs {
         }
         Ok(StructAttrs {
             rename_all,
-            // deny_unknown_fields,
+            deny_unknown_fields,
         })
     }
 }
@@ -143,24 +143,29 @@ pub(crate) fn get_attr<'field>(
         .next()
 }
 
-pub(crate) fn name(struct_attr: &StructAttrs, field: &Field) -> Option<String> {
-    if let Some(attr) = get_attr(&field.attrs, "simd_json")
-        .map(field_attrs)
-        .and_then(|a| a.rename)
-    {
-        Some(format!("{}:", simd_json::OwnedValue::from(attr).encode()))
-    } else if let Some(attr) = get_attr(&field.attrs, "serde")
-        .map(field_attrs)
-        .and_then(|a| a.rename)
-    {
-        Some(format!("{}:", simd_json::OwnedValue::from(attr).encode()))
-    } else {
-        field.ident.as_ref().map(|ident| {
-            format!(
-                "{}:",
-                simd_json::OwnedValue::from(struct_attr.rename_all.apply(&ident.to_string()))
-                    .encode()
-            )
-        })
+impl StructAttrs {
+    pub(crate) fn deny_unknown_fields(&self) -> bool {
+        self.deny_unknown_fields
+    }
+
+    pub(crate) fn name(&self, field: &Field) -> Option<String> {
+        if let Some(attr) = get_attr(&field.attrs, "simd_json")
+            .map(field_attrs)
+            .and_then(|a| a.rename)
+        {
+            Some(format!("{}:", simd_json::OwnedValue::from(attr).encode()))
+        } else if let Some(attr) = get_attr(&field.attrs, "serde")
+            .map(field_attrs)
+            .and_then(|a| a.rename)
+        {
+            Some(format!("{}:", simd_json::OwnedValue::from(attr).encode()))
+        } else {
+            field.ident.as_ref().map(|ident| {
+                format!(
+                    "{}:",
+                    simd_json::OwnedValue::from(self.rename_all.apply(&ident.to_string())).encode()
+                )
+            })
+        }
     }
 }

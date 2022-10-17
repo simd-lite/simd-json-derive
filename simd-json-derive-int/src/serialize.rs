@@ -72,8 +72,9 @@ fn derive_named_struct(
     let mut values = Vec::new();
 
     for f in &fields {
-        if let Some((name, ident)) =
-            name(&attrs, f).and_then(|name| Some((name, f.ident.as_ref()?.clone())))
+        if let Some((name, ident)) = attrs
+            .name(f)
+            .and_then(|name| Some((name, f.ident.as_ref()?.clone())))
         {
             keys.push(name);
             values.push(ident);

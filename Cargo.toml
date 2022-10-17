@@ -9,6 +9,7 @@ documentation = "https://docs.rs/simd-json-derive"
 readme = "README.md"
 homepage = "https://docs.rs/simd-json-derive"
 repository = "https://github.com/simd-lite/simd-json-derive/"
+rust-version = "1.59"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

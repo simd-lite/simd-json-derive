@@ -15,19 +15,11 @@ macro_rules! vec_like {
             {
                 let mut i = self.iter();
                 if let Some(first) = i.next() {
-                    if let Err(e) = writer.write_all(b"[") {
-                        return Err(e);
-                    };
-                    if let Err(e) = first.json_write(writer) {
-                        return Err(e);
-                    };
+                    writer.write_all(b"[")?;
+                    first.json_write(writer)?;
                     for e in i {
-                        if let Err(e) = writer.write_all(b",") {
-                            return Err(e);
-                        };
-                        if let Err(e) = e.json_write(writer) {
-                            return Err(e);
-                        };
+                        writer.write_all(b",")?;
+                        e.json_write(writer)?;
                     }
                     writer.write_all(b"]")
                 } else {
@@ -168,19 +160,11 @@ where
     {
         let mut i = self.iter();
         if let Some(first) = i.next() {
-            if let Err(e) = writer.write_all(b"[") {
-                return Err(e);
-            };
-            if let Err(e) = first.json_write(writer) {
-                return Err(e);
-            };
+            writer.write_all(b"[")?;
+            first.json_write(writer)?;
             for e in i {
-                if let Err(e) = writer.write_all(b",") {
-                    return Err(e);
-                };
-                if let Err(e) = e.json_write(writer) {
-                    return Err(e);
-                };
+                writer.write_all(b",")?;
+                e.json_write(writer)?;
             }
             writer.write_all(b"]")
         } else {
@@ -225,31 +209,15 @@ where
     {
         let mut i = self.iter();
         if let Some((k, v)) = i.next() {
-            if let Err(e) = writer.write_all(b"{") {
-                return Err(e);
-            };
-            if let Err(e) = k.json_write(writer) {
-                return Err(e);
-            };
-            if let Err(e) = writer.write_all(b":") {
-                return Err(e);
-            };
-            if let Err(e) = v.json_write(writer) {
-                return Err(e);
-            };
+            writer.write_all(b"{")?;
+            k.json_write(writer)?;
+            writer.write_all(b":")?;
+            v.json_write(writer)?;
             for (k, v) in i {
-                if let Err(e) = writer.write_all(b",") {
-                    return Err(e);
-                };
-                if let Err(e) = k.json_write(writer) {
-                    return Err(e);
-                };
-                if let Err(e) = writer.write_all(b":") {
-                    return Err(e);
-                };
-                if let Err(e) = v.json_write(writer) {
-                    return Err(e);
-                };
+                writer.write_all(b",")?;
+                k.json_write(writer)?;
+                writer.write_all(b":")?;
+                v.json_write(writer)?;
             }
             writer.write_all(b"}")
         } else {
@@ -294,31 +262,15 @@ where
     {
         let mut i = self.iter();
         if let Some((k, v)) = i.next() {
-            if let Err(e) = writer.write_all(b"{") {
-                return Err(e);
-            };
-            if let Err(e) = k.json_write(writer) {
-                return Err(e);
-            };
-            if let Err(e) = writer.write_all(b":") {
-                return Err(e);
-            };
-            if let Err(e) = v.json_write(writer) {
-                return Err(e);
-            };
+            writer.write_all(b"{")?;
+            k.json_write(writer)?;
+            writer.write_all(b":")?;
+            v.json_write(writer)?;
             for (k, v) in i {
-                if let Err(e) = writer.write_all(b",") {
-                    return Err(e);
-                };
-                if let Err(e) = k.json_write(writer) {
-                    return Err(e);
-                };
-                if let Err(e) = writer.write_all(b":") {
-                    return Err(e);
-                };
-                if let Err(e) = v.json_write(writer) {
-                    return Err(e);
-                };
+                writer.write_all(b",")?;
+                k.json_write(writer)?;
+                writer.write_all(b":")?;
+                v.json_write(writer)?;
             }
             writer.write_all(b"}")
         } else {
@@ -358,18 +310,10 @@ where
     where
         W: Write,
     {
-        if let Err(e) = writer.write_all(b"{\"start\":") {
-            return Err(e);
-        };
-        if let Err(e) = self.start.json_write(writer) {
-            return Err(e);
-        }
-        if let Err(e) = writer.write_all(b",\"end\":") {
-            return Err(e);
-        };
-        if let Err(e) = self.end.json_write(writer) {
-            return Err(e);
-        }
+        writer.write_all(b"{\"start\":")?;
+        self.start.json_write(writer)?;
+        writer.write_all(b",\"end\":")?;
+        self.end.json_write(writer)?;
         writer.write_all(b"}")
     }
 }

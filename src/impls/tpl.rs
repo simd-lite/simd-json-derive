@@ -40,18 +40,12 @@ macro_rules! tuple_impls {
                 where
                     W: Write,
                 {
-                    if let Err(e) = writer.write_all(b"["){
-                        return Err(e);
-                    };
+                    writer.write_all(b"[")?;
                     $(
                         if $n != 0 {
-                            if let Err(e) = writer.write_all(b","){
-                                return Err(e);
-                            };
+                            writer.write_all(b",")?;
                         }
-                        if let Err(e) = self.$n.json_write(writer){
-                            return Err(e);
-                        };
+                        self.$n.json_write(writer)?;
                     )+
                     writer.write_all(b"]")
                 }
