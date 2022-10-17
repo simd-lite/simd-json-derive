@@ -1,7 +1,9 @@
 # simd-json-derive
 
 [![Latest version](https://img.shields.io/crates/v/simd-json-derive.svg)](https://crates.io/crates/simd-json-derive)
+[![documentation](https://img.shields.io/docsrs/simd-json-derive)](https://docs.rs/simd-json-derive)
 ![License](https://img.shields.io/crates/l/simd-json-derive.svg)
+
 
 Derives for high performance JSON serialisation and deserialisation.
 
