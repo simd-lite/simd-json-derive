@@ -23,8 +23,13 @@ simd-json = '0.6'
 [dev-dependencies]
 serde_json = "1"
 serde = "1"
+criterion = "0.4"
 
 [features]
 default = ["impl-chrono"]
 impl-chrono = ["chrono"]
 128bit = ["simd-json-derive-int/128bit", "simd-json/128bit"]
+
+[[bench]]
+name = "value"
+harness = false
