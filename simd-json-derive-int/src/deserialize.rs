@@ -24,7 +24,6 @@ fn derive_named_struct(
     let mut ids = Vec::new();
     let mut opt_ids = Vec::new();
     let mut id: u64 = 0;
-    let mut all: u64 = 0;
     let mut all_needed: u64 = 0;
     let deny_unknown_fields: bool = attrs.deny_unknown_fields();
     let params = &generics.params;
@@ -52,7 +51,6 @@ fn derive_named_struct(
             let name = name.trim_matches(':').trim_matches('"').to_string();
             let bit = 1 << id;
             id += 1;
-            all = all | bit;
             if is_option {
                 options.push(ident.clone());
                 opt_ids.push(bit);
@@ -151,6 +149,7 @@ fn derive_named_struct(
                         } = __res;
                         #(
                         if #ids & __seen == 0 {
+                            #[allow(clippy::forget_ref)]
                             ::std::mem::forget(#values);
                         };
                         )*

@@ -39,19 +39,11 @@ fn derive_unnamed_struct(
                 fn json_write<W>(&self, writer: &mut W) -> std::io::Result<()>
                 where
                     W: std::io::Write {
-                        if let Err(e) = writer.write_all(b"[") {
-                            return Err(e)
-                        }
-                            if let Err(e) = self.0.json_write(writer) {
-                                return Err(e)
-                            }
+                        writer.write_all(b"[")?;
+                        self.0.json_write(writer)?;
                         #(
-                            if let Err(e) = writer.write_all(b",") {
-                                return Err(e)
-                            };
-                            if let Err(e) = self.#keys.json_write(writer) {
-                                return Err(e)
-                            };
+                            writer.write_all(b",")?;
+                            self.#keys.json_write(writer)?;
                         )*
                         writer.write_all(b"]")
                     }
@@ -95,12 +87,8 @@ fn derive_named_struct(
             where
                 W: std::io::Write {
                     #(
-                        if let Err(e) = writer.write_all(#keys.as_bytes()) {
-                            return Err(e);
-                        }
-                        if let Err(e) = self.#values.json_write(writer) {
-                            return Err(e);
-                        }
+                        writer.write_all(#keys.as_bytes())?;
+                        self.#values.json_write(writer)?;
                     )*
                     writer.write_all(b"}")
                 }
@@ -172,12 +160,8 @@ fn derive_enum(ident: Ident, data: DataEnum, generics: Generics) -> TokenStream 
     let unnamed1 = quote! {
         #(
             #ident::#unnamed1_idents(v) => {
-                if let Err(e) = writer.write_all(#unnamed1_keys.as_bytes()) {
-                    return Err(e);
-                };
-                if let Err(e) = v.json_write(writer) {
-                    return Err(e);
-                };
+                writer.write_all(#unnamed1_keys.as_bytes())?;
+                v.json_write(writer)?;
                 writer.write_all(b"}")
             }
         ),*
@@ -213,16 +197,10 @@ fn derive_enum(ident: Ident, data: DataEnum, generics: Generics) -> TokenStream 
     let unnamed_vecs = unnamed_var_names.iter().map(|vs| {
         let (first, rest) = vs.split_first().expect("zero unnamed vars");
         quote! {
-            if let Err(e) = #first.json_write(writer) {
-                return Err(e);
-            };
+            #first.json_write(writer)?;
             #(
-                if let Err(e) = writer.write_all(b",") {
-                    return Err(e);
-                };
-                if let Err(e) = #rest.json_write(writer) {
-                    return Err(e);
-                };
+                writer.write_all(b",")?;
+                #rest.json_write(writer)?;
             )*
         }
     });
@@ -233,9 +211,7 @@ fn derive_enum(ident: Ident, data: DataEnum, generics: Generics) -> TokenStream 
         #(
             #ident::#unnamed_idents(#unnamed_vars) =>
             {
-                if let Err(e) = writer.write_all(#unnamed_keys.as_bytes()) {
-                    return Err(e);
-                };
+                writer.write_all(#unnamed_keys.as_bytes())?;
                 #unnamed_vecs
                 writer.write_all(b"]}")
             }
@@ -271,19 +247,11 @@ fn derive_enum(ident: Ident, data: DataEnum, generics: Generics) -> TokenStream 
 
         named_bodies.push(quote! {
             #ident::#named_ident{#(#fields),*} => {
-                if let Err(e) = writer.write_all(#start.as_bytes()) {
-                    return Err(e);
-                };
-                if let Err(e) = #first.json_write(writer) {
-                    return Err(e);
-                };
+                writer.write_all(#start.as_bytes())?;
+                #first.json_write(writer)?;
                 #(
-                    if let Err(e) = writer.write_all(#rest_keys.as_bytes()) {
-                        return Err(e);
-                    };
-                    if let Err(e) = #rest.json_write(writer) {
-                        return Err(e);
-                    };
+                    writer.write_all(#rest_keys.as_bytes())?;
+                    #rest.json_write(writer)?;
 
                 )*
                 writer.write_all(b"}}")

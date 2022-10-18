@@ -62,9 +62,9 @@ mod test {
     #[test]
     fn slice() {
         let s: [u8; 0] = [];
-        assert_eq!((&s).json_string().unwrap(), "[]");
-        assert_eq!((&[1]).json_string().unwrap(), "[1]");
-        assert_eq!((&[1, 2]).json_string().unwrap(), "[1,2]");
-        assert_eq!((&[1, 2, 3]).json_string().unwrap(), "[1,2,3]");
+        assert_eq!(s.json_string().unwrap(), "[]");
+        assert_eq!([1].json_string().unwrap(), "[1]");
+        assert_eq!([1, 2].json_string().unwrap(), "[1,2]");
+        assert_eq!([1, 2, 3].json_string().unwrap(), "[1,2,3]");
     }
 }

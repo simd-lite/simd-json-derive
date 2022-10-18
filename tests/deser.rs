@@ -124,7 +124,7 @@ fn event() {
 
 #[test]
 fn enum_ser() {
-    #[derive(Deserialize, PartialEq, Debug)]
+    #[derive(Deserialize, PartialEq, Eq, Debug)]
     pub enum StoredVariants {
         YesNo(bool),
         Small(u8, i8),

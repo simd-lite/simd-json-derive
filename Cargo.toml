@@ -36,3 +36,10 @@ allow-non-simd = [
 
 [package.metadata.docs.rs]
 features = ["allow-non-simd"]
+
+[[bench]]
+name = "value"
+harness = false
+
+[[example]]
+name = "enum1"

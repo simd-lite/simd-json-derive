@@ -1,5 +1,3 @@
-use std::mem::MaybeUninit;
-
 use crate::{Deserialize, Serialize};
 use simd_json::{BorrowedValue, Node, OwnedValue};
 use value_trait::Writable;
@@ -40,14 +38,13 @@ impl<'input, 'tape> OwnedDeser<'input, 'tape> {
         // Rust doens't optimize the normal loop away here
         // so we write our own avoiding the lenght
         // checks during push
-        let res: Vec<OwnedValue> = unsafe {
-            let mut res: Vec<MaybeUninit<OwnedValue>> = Vec::with_capacity(len);
-            for i in 0..len {
-                res.get_unchecked_mut(i).write(self.parse().unwrap());
-            }
+        let mut res: Vec<OwnedValue> = Vec::with_capacity(len);
+        unsafe {
             res.set_len(len);
-            std::mem::transmute(res)
-        };
+            for i in 0..len {
+                std::ptr::write(res.get_unchecked_mut(i), self.parse().unwrap());
+            }
+        }
         OwnedValue::Array(res)
     }
 
@@ -95,14 +92,13 @@ impl<'input, 'tape> BorrowedDeser<'input, 'tape> {
         // Rust doens't optimize the normal loop away here
         // so we write our own avoiding the lenght
         // checks during push
-        let res: Vec<BorrowedValue> = unsafe {
-            let mut res: Vec<MaybeUninit<BorrowedValue>> = Vec::with_capacity(len);
-            for i in 0..len {
-                res.get_unchecked_mut(i).write(self.parse().unwrap());
-            }
+        let mut res = Vec::with_capacity(len);
+        unsafe {
             res.set_len(len);
-            std::mem::transmute(res)
-        };
+            for i in 0..len {
+                std::ptr::write(res.get_unchecked_mut(i), self.parse().unwrap());
+            }
+        }
         BorrowedValue::Array(res)
     }
 
