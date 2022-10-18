@@ -1,0 +1,63 @@
+name: Quality
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+
+jobs:
+  clippy_check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          profiles: minimal
+          override: true
+          components: rustfmt,clippy
+      - name: Validate cargo format
+        run: cargo fmt -- --check
+      - name: Check workflow permissions
+        id: check_permissions
+        uses: scherermichael-oss/action-has-permission@1.0.6
+        with:
+          required-permission: write
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Run clippy action to produce annotations
+        uses: actions-rs/clippy-check@v1
+        if: steps.check_permissions.outputs.has-permission
+        env:
+          RUSTFLAGS: "-C target-cpu=native"
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          args: --all
+      - name: Run clippy manually without annotations
+        if: ${{ !steps.check_permissions.outputs.has-permission }}
+        env:
+          RUSTFLAGS: "-C target-cpu=native"
+        run: cargo clippy --all
+  coverage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable        
+          profile: minimal
+          components: llvm-tools-preview
+      - name: Install cargo-llvm-cov
+        uses: taiki-e/install-action@cargo-llvm-cov
+      - name: Run codecov
+        env:
+          RUSTFLAGS: "-C target-cpu=native"
+        run: cargo llvm-cov --lcov --output-path lcov.txt 
+      - uses: codecov/codecov-action@v3
+        with:
+          files: ./lcov.txt # optional
+          flags: ${{ env.flags }} # optional
+          fail_ci_if_error: true # optional (default = false)
+          verbose: true # optional (default = false)
