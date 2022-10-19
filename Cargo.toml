@@ -9,6 +9,7 @@ documentation = "https://docs.rs/simd-json-derive"
 readme = "README.md"
 homepage = "https://docs.rs/simd-json-derive"
 repository = "https://github.com/simd-lite/simd-json-derive/"
+rust-version = "1.59"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -28,3 +29,13 @@ serde = "1"
 default = ["impl-chrono"]
 impl-chrono = ["chrono"]
 128bit = ["simd-json-derive-int/128bit", "simd-json/128bit"]
+allow-non-simd = [
+    "simd-json-derive-int/allow-non-simd",
+    "simd-json/allow-non-simd",
+]
+
+[package.metadata.docs.rs]
+features = ["allow-non-simd"]
+
+[[example]]
+name = "enum1"

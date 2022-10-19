@@ -38,7 +38,7 @@ impl<'input, 'tape> OwnedDeser<'input, 'tape> {
         // Rust doens't optimize the normal loop away here
         // so we write our own avoiding the lenght
         // checks during push
-        let mut res = Vec::with_capacity(len);
+        let mut res: Vec<OwnedValue> = Vec::with_capacity(len);
         unsafe {
             res.set_len(len);
             for i in 0..len {

@@ -2,13 +2,13 @@ use simd_json_derive::{Deserialize, Serialize};
 
 #[test]
 fn rename() {
-    #[derive(Serialize, Deserialize)]
+    #[derive(Serialize, Deserialize, PartialEq, Debug)]
     struct Bla<'f3> {
         #[serde(rename = "f3")]
         f1: u8,
         #[simd_json(rename = "f4")]
         f2: String,
-        #[serde(borrow)]
+        #[serde(borrow, rename = "f1")]
         f3: &'f3 str,
         f5: u8,
     }
@@ -19,11 +19,13 @@ fn rename() {
         f3: "snot",
         f5: 8,
     };
-    println!("{}", b.json_string().unwrap());
-    assert_eq!(
-        r#"{"f3":1,"f4":"snot","f3":"snot","f5":8}"#,
-        b.json_string().unwrap()
-    )
+    let mut serialized = b.json_string().unwrap();
+    println!("{}", &serialized);
+
+    assert_eq!(r#"{"f3":1,"f4":"snot","f1":"snot","f5":8}"#, serialized);
+    let b1 = Bla::from_str(&mut serialized).expect("Expected serde roundtrip with rename to work");
+    println!("{:?}", &b1);
+    assert_eq!(b, b1);
 }
 
 #[test]
