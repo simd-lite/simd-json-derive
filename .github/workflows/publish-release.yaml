@@ -41,8 +41,3 @@ jobs:
           body: ${{ steps.extract-release-notes.outputs.release_notes }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Trigger publish crates workflow
-        uses: benc-uk/workflow-dispatch@v1
-        with:
-          workflow: Publish crates
-          token: ${{ secrets.GITHUB_TOKEN }}
