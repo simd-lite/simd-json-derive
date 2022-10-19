@@ -51,9 +51,10 @@ jobs:
         run: |
           git config user.name "GitHub actions"
           git config user.email noreply@github.com
-      - name: Updating Changelog and Dockerfile
-        run: .github/scripts/Bump.sh ${{ env.OLD }} ${{ env.NEW }}
-      - run: cargo check
+      - name: Run cargo check
+        run: |
+          cargo check --manifest-path=./Cargo.toml
+          cargo check --manifest-path=./simd-json-derive-int/Cargo.toml
       - name: Commit changelog and manifest files
         id: make-commit
         run: |
