@@ -15,7 +15,9 @@ proc-macro = true
 proc-macro2 = "1.0"
 quote = "1.0"
 syn = { version = "1.0", features = ["visit", "extra-traits"] }
-simd-json = { version = "0.6", features = ["allow-non-simd"] }
+simd-json = "0.6"
 
 [features]
+default = ["allow-non-simd"]
 128bit = ["simd-json/128bit"]
+allow-non-simd = ["simd-json/allow-non-simd"]

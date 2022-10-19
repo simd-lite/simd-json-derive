@@ -25,19 +25,11 @@ macro_rules! array_impls {
                 {
                     let mut i = self.iter();
                     if let Some(first) = i.next() {
-                        if let Err(e) = writer.write_all(b"["){
-                            return Err(e);
-                        };
-                        if let Err(e) = first.json_write(writer){
-                            return Err(e);
-                        };
+                        writer.write_all(b"[")?;
+                        first.json_write(writer)?;
                         for e in i {
-                            if let Err(e) = writer.write_all(b","){
-                                return Err(e);
-                            };
-                            if let Err(e) = e.json_write(writer){
-                                return Err(e);
-                            };
+                            writer.write_all(b",")?;
+                            e.json_write(writer)?;
                         }
                         writer.write_all(b"]")
                     } else {
@@ -70,9 +62,9 @@ mod test {
     #[test]
     fn slice() {
         let s: [u8; 0] = [];
-        assert_eq!((&s).json_string().unwrap(), "[]");
-        assert_eq!((&[1]).json_string().unwrap(), "[1]");
-        assert_eq!((&[1, 2]).json_string().unwrap(), "[1,2]");
-        assert_eq!((&[1, 2, 3]).json_string().unwrap(), "[1,2,3]");
+        assert_eq!(s.json_string().unwrap(), "[]");
+        assert_eq!([1].json_string().unwrap(), "[1]");
+        assert_eq!([1, 2].json_string().unwrap(), "[1,2]");
+        assert_eq!([1, 2, 3].json_string().unwrap(), "[1,2,3]");
     }
 }

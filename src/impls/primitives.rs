@@ -149,7 +149,7 @@ impl<'input> Deserialize<'input> for f32 {
             #[cfg(feature = "128bit")]
             Some(simd_json::Node::Static(simd_json::StaticNode::I128(i))) => Ok(i as f32),
             _ => Err(simd_json::Error::generic(
-                simd_json::ErrorType::ExpectedString,
+                simd_json::ErrorType::ExpectedFloat,
             )),
         }
     }

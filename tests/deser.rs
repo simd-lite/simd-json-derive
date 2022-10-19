@@ -93,7 +93,13 @@ fn opt() {
     assert!(Bla::from_str(s.as_mut_str()).is_err());
 
     let mut s = String::from(r#"{"name":"snot", "logo": "badger", "snot":42}"#);
-    assert!(Bla::from_str(s.as_mut_str()).is_err());
+    assert_eq!(
+        Bla {
+            name: MyString("snot".to_string()),
+            logo: Some("badger".to_string())
+        },
+        Bla::from_str(s.as_mut_str()).expect("Didn't ignore unknown field 'snot'")
+    );
 }
 #[test]
 fn event() {
@@ -118,7 +124,7 @@ fn event() {
 
 #[test]
 fn enum_ser() {
-    #[derive(Deserialize, PartialEq, Debug)]
+    #[derive(Deserialize, PartialEq, Eq, Debug)]
     pub enum StoredVariants {
         YesNo(bool),
         Small(u8, i8),
@@ -134,36 +140,3 @@ fn enum_ser() {
     let e = StoredVariants::from_str(s.as_mut_str()).unwrap();
     assert_eq!(StoredVariants::YesNo(true), e);
 }
-// #[test]
-// fn unnamed1_lifetime() {
-//     #[derive(Serialize)]
-//     struct BlaU1L<'a>(&'a str);
-//     let b = BlaU1L("snot");
-//     println!("{}", b.json_string().unwrap());
-//     assert_eq!(r#""snot""#, b.json_string().unwrap())
-// }
-
-// #[test]
-// fn unnamed2_lifetime() {
-//     #[derive(Serialize)]
-//     struct BlaU2L<'a, 'b>(&'a str, &'b str);
-//     let b = BlaU2L("hello", "world");
-//     println!("{}", b.json_string().unwrap());
-//     assert_eq!(r#"["hello","world"]"#, b.json_string().unwrap())
-// }
-
-// #[test]
-// fn named_lifetime() {
-//     #[derive(Serialize)]
-//     struct BlaN2L<'a, 'b> {
-//         f1: &'a str,
-//         f2: &'b str,
-//     };
-
-//     let b = BlaN2L {
-//         f1: "snot",
-//         f2: "badger",
-//     };
-//     println!("{}", b.json_string().unwrap());
-//     assert_eq!(r#"{"f1":"snot","f2":"badger"}"#, b.json_string().unwrap())
-// }

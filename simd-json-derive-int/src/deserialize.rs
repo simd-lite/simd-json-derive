@@ -23,9 +23,9 @@ fn derive_named_struct(
     let mut options = Vec::new();
     let mut ids = Vec::new();
     let mut opt_ids = Vec::new();
-    let mut id: u64 = 1;
-    let mut all: u64 = 0;
+    let mut id: u64 = 0;
     let mut all_needed: u64 = 0;
+    let deny_unknown_fields: bool = attrs.deny_unknown_fields();
     let params = &generics.params;
     let (all_generics, derive_lt) = match params.first() {
         None => (quote! { <'input> }, quote! { 'input }),
@@ -44,13 +44,13 @@ fn derive_named_struct(
             }
         }
 
-        if let Some((name, ident)) =
-            name(&attrs, f).and_then(|name| Some((name, f.ident.as_ref()?.clone())))
+        if let Some((name, ident)) = attrs
+            .name(f)
+            .and_then(|name| Some((name, f.ident.as_ref()?.clone())))
         {
             let name = name.trim_matches(':').trim_matches('"').to_string();
             let bit = 1 << id;
             id += 1;
-            all = all | bit;
             if is_option {
                 options.push(ident.clone());
                 opt_ids.push(bit);
@@ -103,10 +103,13 @@ fn derive_named_struct(
 
                                 },
                                 )*
-                                _ => {
-                                    // FIXME: this should be togglable
-                                    __err = Some(::simd_json::Error::generic(::simd_json::ErrorType::ExpectedMap));
+                                __unknown_field if #deny_unknown_fields => {
+                                    use ::serde::de::Error;
+                                    __err = Some(::simd_json::Error::unknown_field(__unknown_field, &[ #(#keys),* ]));
                                     break
+                                }
+                                _ => {
+                                    // ignore unknown field
                                 }
                             }
                         },
@@ -116,7 +119,25 @@ fn derive_named_struct(
                     }
                 }
                 if (__seen & #all_needed) != #all_needed && __err.is_none() {
-                    __err = Some(::simd_json::Error::generic(::simd_json::ErrorType::ExpectedMap))
+
+                    use ::serde::de::Error;
+                    // extract the missing field names
+                    let mut __missing_field_ids: u64 = (__seen ^ #all_needed);
+                    let mut __missing_fields: Vec<String> = Vec::with_capacity(__missing_field_ids.count_ones() as usize);
+                    while __missing_field_ids != 0 {
+                        #(
+                            if #ids & __missing_field_ids == #ids {
+                                __missing_fields.push(#keys.to_string());
+                                __missing_field_ids ^= #ids; // clear out the bit
+                            }
+                        )*
+                    }
+                    let __msg = if __missing_fields.len() == 1 {
+                        "missing field"
+                    } else {
+                        "missing fields"
+                    };
+                    __err = Some(::simd_json::Error::custom(format!("{}: `{}`", __msg, __missing_fields.join("`, `"))));
                 }
 
                 if let Some(e) = __err {
@@ -128,6 +149,7 @@ fn derive_named_struct(
                         } = __res;
                         #(
                         if #ids & __seen == 0 {
+                            #[allow(clippy::forget_ref)]
                             ::std::mem::forget(#values);
                         };
                         )*
