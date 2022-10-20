@@ -33,9 +33,7 @@ jobs:
           git tag -a -m "Release v${{ env.RELEASE_VERSION }}" "v${{ env.RELEASE_VERSION }}"
           git push origin v${{ env.RELEASE_VERSION }}
       - name: Publish Release from Tag
-        uses: elgohr/Github-Release-Action@v4
+        run: gh release create ${{ env.RELEASE_VERSION }} --notes "Release ${{ env.RELEASE_VERSION }}"
         env:
           GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
-        with:
-          title: ${{ env.RELEASE_VERSION }}
       

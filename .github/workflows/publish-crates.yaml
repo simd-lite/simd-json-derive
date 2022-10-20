@@ -15,6 +15,8 @@ jobs:
         with:
           profile: minimal
           toolchain: stable
+      - name: cargo update
+        run: cargo update
       - name: Publish simd-json-derive-int to crates.io
         uses: katyo/publish-crates@v1
         with:
@@ -32,6 +34,8 @@ jobs:
         with:
           profile: minimal
           toolchain: stable
+      - name: cargo update
+        run: cargo update
       - name: Publish simd-json-derive to crates.io
         uses: katyo/publish-crates@v1
         with:
