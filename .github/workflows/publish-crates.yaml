@@ -15,8 +15,8 @@ jobs:
         with:
           profile: minimal
           toolchain: stable
-      - name: cargo update
-        run: cargo update
+      - name: ensure we are not in detached-head state
+        run: git switch -c v${{ gihub.ref_name }}
       - name: Publish simd-json-derive-int to crates.io
         uses: katyo/publish-crates@v1
         with:
@@ -34,10 +34,10 @@ jobs:
         with:
           profile: minimal
           toolchain: stable
-      - name: cargo update
-        run: cargo update
+      - name: ensure we are not in detached-head state
+        run: git switch -c v${{ gihub.ref_name }}
       - name: Publish simd-json-derive to crates.io
         uses: katyo/publish-crates@v1
         with:
-          path: '.'
+          path: './Cargo.toml'
           registry-token: ${{ secrets.CARGO_REGISTRY_TOKEN }}
