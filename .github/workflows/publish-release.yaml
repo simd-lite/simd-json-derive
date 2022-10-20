@@ -33,7 +33,7 @@ jobs:
           git tag -a -m "Release v${{ env.RELEASE_VERSION }}" "v${{ env.RELEASE_VERSION }}"
           git push origin v${{ env.RELEASE_VERSION }}
       - name: Publish Release from Tag
-        run: gh release create ${{ env.RELEASE_VERSION }} --notes "Release ${{ env.RELEASE_VERSION }}"
+        run: gh release create v${{ env.RELEASE_VERSION }} --notes "Release v${{ env.RELEASE_VERSION }}"
         env:
           GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
       
