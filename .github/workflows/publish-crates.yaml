@@ -1,12 +1,14 @@
 name: Publish crates
-on: workflow_dispatch
+on:
+  release:
+    types: [published]
 
 jobs:
   publish-simd-json-derive-int:
     name: Publish simd-json-derive-int
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 0
       - uses: actions-rs/toolchain@v1
@@ -23,7 +25,7 @@ jobs:
     needs: publish-simd-json-derive-int
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 0
       - uses: actions-rs/toolchain@v1
