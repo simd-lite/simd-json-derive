@@ -1,21 +1,41 @@
 name: "Publish Release"
+
 on:
-  push:
-    tags:
-      - 'v*'
+  pull_request:
+    branches:
+      - main
+    types:
+      - closed
+      - labeled
 jobs:
-  build:
+  create-release-tag:
+    name: Create new release tag
     runs-on: ubuntu-latest
+    if: github.event.pull_request.merged && contains( github.event.pull_request.labels.*.name, 'Release')
     steps:
-    - uses: actions/checkout@v3
-    - name: Publish Release from Tag
-      uses: elgohr/Github-Release-Action@v4
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        title: ${{ github.ref }}
-    - name: Trigger publish crates workflow
-      uses: benc-uk/workflow-dispatch@v1
-      with:
-        workflow: Publish crates
-        token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Extract version from branch name (for release branches)
+        if: startsWith(github.event.pull_request.head.ref, 'release/')
+        run: |
+          BRANCH_NAME="${{ github.event.pull_request.head.ref }}"
+          VERSION=${BRANCH_NAME#release/}
+          echo "RELEASE_VERSION=$VERSION" >> $GITHUB_ENV
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Initialize mandatory git config
+        run: |
+          git config user.name "GitHub actions"
+          git config user.email noreply@github.com
+      - name: Pushing tags
+        # we push as github-actions, so this will not trigger any actions that listen on pushed tags or something
+        run: |
+          VER=$(echo v${{ env.RELEASE_VERSION }} | sed 's/.*rc.*/rc/')
+          echo "RC=$VER" >> $GITHUB_ENV
+          git tag -a -m "Release v${{ env.RELEASE_VERSION }}" "v${{ env.RELEASE_VERSION }}"
+          git push origin v${{ env.RELEASE_VERSION }}
+      - name: Publish Release from Tag
+        uses: elgohr/Github-Release-Action@v4
+        env:
+          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
+        with:
+          title: ${{ env.RELEASE_VERSION }}
+      
