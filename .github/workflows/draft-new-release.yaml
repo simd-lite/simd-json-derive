@@ -43,6 +43,8 @@ jobs:
           cargo set-version -p simd-json-derive-int --manifest-path=./simd-json-derive-int/Cargo.toml --bump ${{ env.VER }}
           cargo set-version -p simd-json-derive     --manifest-path=./Cargo.toml                      --bump ${{ env.VER }}
           NEW_VERSION=$(cargo pkgid | cut -d# -f2 | cut -d: -f2)
+          # update simd-json-derive-int dependency to bumped version
+          cargo upgrade --offline --recursive false -p "simd-json-derive-int@$NEW_VERSION"
           echo "NEW=$NEW_VERSION" >> $GITHUB_ENV   
       - name: Create release branch
         run: |
