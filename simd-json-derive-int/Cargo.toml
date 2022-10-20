@@ -5,8 +5,8 @@ authors = ["Heinz N. Gies <heinz@licenser.net>"]
 edition = "2021"
 license = "Apache-2.0/MIT"
 description = "procmacros for simd-json-derive"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+documentation = "https://docs.rs/simd-json-derive-int"
+repository = "https://github.com/simd-lite/simd-json-derive"
 
 [lib]
 proc-macro = true
