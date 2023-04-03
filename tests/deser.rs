@@ -124,12 +124,13 @@ fn event() {
 
 #[test]
 fn enum_ser() {
-    #[derive(Deserialize, PartialEq, Eq, Debug)]
+    #[derive(Deserialize, Serialize, PartialEq, Eq, Debug)]
     pub enum StoredVariants {
         YesNo(bool),
         Small(u8, i8),
         Signy(i64),
         Stringy(String),
+        Res(Result<u8, String>),
     }
 
     let mut s = String::from(r#"{"Small":[1,2]}"#);
@@ -139,4 +140,20 @@ fn enum_ser() {
     let mut s = String::from(r#"{"YesNo":true}"#);
     let e = StoredVariants::from_str(s.as_mut_str()).unwrap();
     assert_eq!(StoredVariants::YesNo(true), e);
+
+    let mut s = String::from(r#"{"Res":{"ok":42}}"#);
+    let e = StoredVariants::from_str(s.as_mut_str()).unwrap();
+    assert_eq!(StoredVariants::Res(Ok(42)), e);
+
+    let mut s = String::from(r#"{"Res":{"err":"snot"}}"#);
+    let e = StoredVariants::from_str(s.as_mut_str()).unwrap();
+    assert_eq!(StoredVariants::Res(Err(String::from("snot"))), e);
+
+    let e = StoredVariants::Res(Ok(42)).json_string().unwrap();
+    assert_eq!(r#"{"Res":{"ok":42}}"#, e);
+
+    let e = StoredVariants::Res(Err(String::from("snot")))
+        .json_string()
+        .unwrap();
+    assert_eq!(r#"{"Res":{"err":"snot"}}"#, e);
 }
