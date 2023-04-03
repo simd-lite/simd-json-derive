@@ -70,12 +70,12 @@ where
     {
         match self {
             Ok(e) => {
-                writer.write_all(b"{\"ok\":")?;
+                writer.write_all(b"{\"Ok\":")?;
                 e.json_write(writer)?;
                 writer.write_all(b"}")
             }
             Err(e) => {
-                writer.write_all(b"{\"err\":")?;
+                writer.write_all(b"{\"Err\":")?;
                 e.json_write(writer)?;
                 writer.write_all(b"}")
             }
@@ -95,6 +95,8 @@ where
     {
         if let Some(simd_json::Node::Object(1, _)) = tape.next() {
             match tape.next() {
+                Some(simd_json::Node::String("Ok")) => Ok(Ok(TOk::from_tape(tape)?)),
+                Some(simd_json::Node::String("Err")) => Ok(Err(TErr::from_tape(tape)?)),
                 Some(simd_json::Node::String("ok")) => Ok(Ok(TOk::from_tape(tape)?)),
                 Some(simd_json::Node::String("err")) => Ok(Err(TErr::from_tape(tape)?)),
                 _ => Err(simd_json::Error::generic(simd_json::ErrorType::ExpectedMap)),
