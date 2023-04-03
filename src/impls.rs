@@ -57,3 +57,50 @@ where
         }
     }
 }
+
+impl<TOk, TErr> Serialize for std::result::Result<TOk, TErr>
+where
+    TOk: Serialize,
+    TErr: Serialize,
+{
+    #[inline]
+    fn json_write<W>(&self, writer: &mut W) -> io::Result<()>
+    where
+        W: Write,
+    {
+        match self {
+            Ok(e) => {
+                writer.write_all(b"{\"ok\":")?;
+                e.json_write(writer)?;
+                writer.write_all(b"}")
+            }
+            Err(e) => {
+                writer.write_all(b"{\"err\":")?;
+                e.json_write(writer)?;
+                writer.write_all(b"}")
+            }
+        }
+    }
+}
+
+impl<'input, TOk, TErr> Deserialize<'input> for std::result::Result<TOk, TErr>
+where
+    TOk: Deserialize<'input>,
+    TErr: Deserialize<'input>,
+{
+    #[inline]
+    fn from_tape(tape: &mut Tape<'input>) -> simd_json::Result<Self>
+    where
+        Self: std::marker::Sized + 'input,
+    {
+        if let Some(simd_json::Node::Object(1, _)) = tape.next() {
+            match tape.next() {
+                Some(simd_json::Node::String("ok")) => Ok(Ok(TOk::from_tape(tape)?)),
+                Some(simd_json::Node::String("err")) => Ok(Err(TErr::from_tape(tape)?)),
+                _ => Err(simd_json::Error::generic(simd_json::ErrorType::ExpectedMap)),
+            }
+        } else {
+            Err(simd_json::Error::generic(simd_json::ErrorType::ExpectedMap))
+        }
+    }
+}
