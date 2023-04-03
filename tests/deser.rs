@@ -141,19 +141,19 @@ fn enum_ser() {
     let e = StoredVariants::from_str(s.as_mut_str()).unwrap();
     assert_eq!(StoredVariants::YesNo(true), e);
 
-    let mut s = String::from(r#"{"Res":{"ok":42}}"#);
+    let mut s = String::from(r#"{"Res":{"Ok":42}}"#);
     let e = StoredVariants::from_str(s.as_mut_str()).unwrap();
     assert_eq!(StoredVariants::Res(Ok(42)), e);
 
-    let mut s = String::from(r#"{"Res":{"err":"snot"}}"#);
+    let mut s = String::from(r#"{"Res":{"Err":"snot"}}"#);
     let e = StoredVariants::from_str(s.as_mut_str()).unwrap();
     assert_eq!(StoredVariants::Res(Err(String::from("snot"))), e);
 
     let e = StoredVariants::Res(Ok(42)).json_string().unwrap();
-    assert_eq!(r#"{"Res":{"ok":42}}"#, e);
+    assert_eq!(r#"{"Res":{"Ok":42}}"#, e);
 
     let e = StoredVariants::Res(Err(String::from("snot")))
         .json_string()
         .unwrap();
-    assert_eq!(r#"{"Res":{"err":"snot"}}"#, e);
+    assert_eq!(r#"{"Res":{"Err":"snot"}}"#, e);
 }
