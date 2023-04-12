@@ -139,7 +139,7 @@ pub(crate) fn get_attr<'field>(
 ) -> Option<&'field Attribute> {
     attrs
         .iter()
-        .filter(|a| a.path.get_ident().map(|i| i == name).unwrap_or_default())
+        .filter(|a| a.path().get_ident().map(|i| i == name).unwrap_or_default())
         .next()
 }
 
