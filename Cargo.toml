@@ -15,7 +15,7 @@ rust-version = "1.61"
 
 [dependencies]
 simd-json-derive-int = { path = "./simd-json-derive-int", version = "0.8.0" }
-value-trait = "0.5"
+value-trait = "0.6"
 itoa = "1"
 ryu = "1"
 chrono = { version = "0.4", optional = true }
