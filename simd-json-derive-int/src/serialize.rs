@@ -103,15 +103,13 @@ fn derive_enum(ident: Ident, data: DataEnum, generics: Generics) -> TokenStream 
     let (simple, variants): (Vec<_>, Vec<_>) =
         variants.into_iter().partition(|v| v.fields.is_empty());
     let (named, unnamed): (Vec<_>, Vec<_>) = variants.iter().partition(|v| {
-        if let Variant {
-            fields: Fields::Named(_),
-            ..
-        } = v
-        {
-            true
-        } else {
-            false
-        }
+        matches!(
+            v,
+            Variant {
+                fields: Fields::Named(_),
+                ..
+            }
+        )
     });
 
     let (unnamed1, unnamed): (Vec<_>, Vec<_>) =
@@ -125,10 +123,7 @@ fn derive_enum(ident: Ident, data: DataEnum, generics: Generics) -> TokenStream 
         .map(|s| {
             (
                 &s.ident,
-                format!(
-                    "{}",
-                    simd_json::OwnedValue::from(s.ident.to_string()).encode()
-                ),
+                simd_json::OwnedValue::from(s.ident.to_string()).encode(),
             )
         })
         .unzip();
