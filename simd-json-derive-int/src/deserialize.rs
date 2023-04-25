@@ -56,7 +56,7 @@ fn derive_named_struct(
                 opt_ids.push(bit);
                 getters.push(quote! { #ident.and_then(::std::convert::identity) })
             } else {
-                all_needed = all_needed | bit;
+                all_needed |= bit;
                 getters.push(quote! { #ident.expect(concat!("failed to get field ", #name))  })
             }
             keys.push(name);
@@ -227,15 +227,13 @@ fn derive_enum(
     let (simple, variants): (Vec<_>, Vec<_>) =
         variants.into_iter().partition(|v| v.fields.is_empty());
     let (named, unnamed): (Vec<_>, Vec<_>) = variants.iter().partition(|v| {
-        if let Variant {
-            fields: Fields::Named(_),
-            ..
-        } = v
-        {
-            true
-        } else {
-            false
-        }
+        matches!(
+            v,
+            Variant {
+                fields: Fields::Named(_),
+                ..
+            }
+        )
     });
 
     let (unnamed1, unnamed): (Vec<_>, Vec<_>) =
