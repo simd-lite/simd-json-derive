@@ -8,6 +8,7 @@ fn unnamed1() {
     println!("{}", b.json_string().unwrap());
     assert_eq!(r#"1"#, b.json_string().unwrap())
 }
+
 #[test]
 fn unnamed2() {
     #[derive(simd_json_derive::Serialize)]
@@ -86,4 +87,21 @@ fn borrowed() {
         },
         SIMDExample::from_str(s.as_mut_str()).unwrap()
     );
+}
+
+#[test]
+fn tpl_array() {
+    #[derive(simd_json_derive::Serialize, simd_json_derive::Deserialize, PartialEq, Debug)]
+    struct Bla {
+        tpl: (u8, u8),
+        array: [u8; 2],
+    }
+    let b = Bla {
+        tpl: (1, 2),
+        array: [3, 4],
+    };
+    println!("{}", b.json_string().unwrap());
+    let mut s = r#"{"tpl":[1,2],"array":[3,4]}"#.to_string();
+    assert_eq!(s, b.json_string().unwrap());
+    assert_eq!(b, Bla::from_str(s.as_mut_str()).unwrap());
 }
