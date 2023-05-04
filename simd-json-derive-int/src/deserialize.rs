@@ -74,15 +74,14 @@ fn derive_named_struct(
             where
                 Self: std::marker::Sized + #derive_lt
             {
-                let mut __seen: u64 = 0;
-                let mut __err: Option<::simd_json::Error> = None;
-                let mut __res: Self = unsafe{::std::mem::MaybeUninit::uninit().assume_init()};
                 let __deser_size: usize = if let Some(::simd_json::Node::Object(size, _)) = __deser_tape.next() {
                     size
                 } else {
-                    ::std::mem::forget(__res);
                     return Err(::simd_json::Error::generic(::simd_json::ErrorType::ExpectedMap));
                 };
+                let mut __seen: u64 = 0;
+                let mut __err: Option<::simd_json::Error> = None;
+                let mut __res: Self = unsafe{::std::mem::MaybeUninit::uninit().assume_init()};
 
                 for _ in 0..__deser_size {
                     match __deser_tape.next() {
@@ -123,21 +122,16 @@ fn derive_named_struct(
                     use ::serde::de::Error;
                     // extract the missing field names
                     let mut __missing_field_ids: u64 = (__seen ^ #all_needed);
-                    let mut __missing_fields: Vec<String> = Vec::with_capacity(__missing_field_ids.count_ones() as usize);
+                    let mut __missing_fields: Vec<&'static str> = Vec::with_capacity(__missing_field_ids.count_ones() as usize);
                     while __missing_field_ids != 0 {
                         #(
                             if #ids & __missing_field_ids == #ids {
-                                __missing_fields.push(#keys.to_string());
+                                __missing_fields.push(#keys);
                                 __missing_field_ids ^= #ids; // clear out the bit
                             }
                         )*
                     }
-                    let __msg = if __missing_fields.len() == 1 {
-                        "missing field"
-                    } else {
-                        "missing fields"
-                    };
-                    __err = Some(::simd_json::Error::custom(format!("{}: `{}`", __msg, __missing_fields.join("`, `"))));
+                    __err = Some(::simd_json::Error::custom(format!("{}: `{}`", "missing fields", __missing_fields.join("`, `"))));
                 }
 
                 if let Some(e) = __err {
