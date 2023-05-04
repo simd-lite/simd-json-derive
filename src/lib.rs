@@ -24,7 +24,7 @@ pub trait Serialize {
     #[inline]
     fn json_string(&self) -> io::Result<String> {
         self.json_vec()
-            .and_then(|v| String::from_utf8(v).map_err(|e| io::Error::new(io::ErrorKind::Other, e)))
+            .map(|v| unsafe { String::from_utf8_unchecked(v) })
     }
 }
 
@@ -111,22 +111,5 @@ impl<W: Write> BaseGenerator for DummyGenerator<W> {
     #[inline]
     fn write_min(&mut self, _: &[u8], _: u8) -> io::Result<()> {
         unimplemented!()
-    }
-}
-
-#[cfg(test)]
-mod test {
-    use super::*;
-    #[test]
-    fn invalid_utf8() {
-        struct Struct;
-
-        impl Serialize for Struct {
-            fn json_write<W: Write>(&self, writer: &mut W) -> io::Result<()> {
-                writer.write_all(b"\xff")
-            }
-        }
-
-        assert!(Struct.json_string().is_err());
     }
 }

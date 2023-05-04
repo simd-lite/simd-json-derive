@@ -42,11 +42,21 @@ where
     {
         match tape.next() {
             Some(simd_json::Node::Array(size, _)) => {
-                let mut v = Vec::with_capacity(size);
-                for _ in 0..size {
-                    v.push(T::from_tape(tape)?)
+                let mut res = Vec::with_capacity(size);
+                #[allow(clippy::uninit_vec)]
+                unsafe {
+                    res.set_len(size);
+                    for i in 0..size {
+                        match T::from_tape(tape) {
+                            Ok(t) => std::ptr::write(res.get_unchecked_mut(i), t),
+                            Err(e) => {
+                                res.set_len(i);
+                                return Err(e);
+                            }
+                        }
+                    }
                 }
-                Ok(v)
+                Ok(res)
             }
             _other => Err(simd_json::Error::generic(
                 simd_json::ErrorType::ExpectedArray,

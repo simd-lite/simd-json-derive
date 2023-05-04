@@ -11,6 +11,9 @@ homepage = "https://docs.rs/simd-json-derive"
 repository = "https://github.com/simd-lite/simd-json-derive/"
 rust-version = "1.61"
 
+[profile.bench]
+debug = 2
+
 [workspace]
 members = ["simd-json-derive-int"]
 
@@ -22,12 +25,14 @@ value-trait = "0.6"
 itoa = "1"
 ryu = "1"
 chrono = { version = "0.4", optional = true }
-simd-json = '0.9'
+simd-json = '0.9.2'
 
 [dev-dependencies]
 serde_json = "1"
 serde = "1"
 criterion = "0.4"
+rand = "0.8"
+
 
 [features]
 default = ["impl-chrono"]
@@ -46,4 +51,8 @@ name = "enum1"
 
 [[bench]]
 name = "value"
+harness = false
+
+[[bench]]
+name = "mesh"
 harness = false
