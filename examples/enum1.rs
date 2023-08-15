@@ -11,7 +11,7 @@ pub enum StoredVariants {
 fn main() {
     let x = StoredVariants::Signy(-1);
     let mut serialized = x.json_string().expect("serialization shouldnt fail :(");
-    let deserialized = StoredVariants::from_str(serialized.as_mut_str())
+    let deserialized = unsafe { StoredVariants::from_str(serialized.as_mut_str()) }
         .expect("serialized stuff should be deserializable");
     println!("Serialized: {x:?}");
     println!("Deserialized: {deserialized:?}");

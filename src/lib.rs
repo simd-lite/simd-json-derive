@@ -1,3 +1,5 @@
+extern crate core;
+
 use simd_json::AlignedBuf;
 pub use simd_json_derive_int::*;
 use std::collections;
@@ -33,6 +35,7 @@ pub trait SerializeAsKey {
     where
         W: Write;
 }
+
 impl<T: AsRef<str>> SerializeAsKey for T {
     #[inline]
     fn json_write<W>(&self, writer: &mut W) -> Result
@@ -47,12 +50,12 @@ impl<T: AsRef<str>> SerializeAsKey for T {
 pub trait Deserialize<'input> {
     fn from_tape(tape: &mut Tape<'input>) -> simd_json::Result<Self>
     where
-        Self: std::marker::Sized + 'input;
+        Self: Sized + 'input;
 
     #[inline]
     fn from_slice(json: &'input mut [u8]) -> simd_json::Result<Self>
     where
-        Self: std::marker::Sized + 'input,
+        Self: Sized + 'input,
     {
         let tape = simd_json::to_tape(json)?;
         let mut itr = tape.into_iter().peekable();
@@ -66,7 +69,7 @@ pub trait Deserialize<'input> {
         string_buffer: &mut [u8],
     ) -> simd_json::Result<Self>
     where
-        Self: std::marker::Sized + 'input,
+        Self: Sized + 'input,
     {
         let tape =
             simd_json::Deserializer::from_slice_with_buffer(json, string_buffer)?.into_tape();
@@ -82,7 +85,7 @@ pub trait Deserialize<'input> {
         string_buffer: &mut [u8],
     ) -> simd_json::Result<Self>
     where
-        Self: std::marker::Sized + 'input,
+        Self: Sized + 'input,
     {
         let tape =
             simd_json::Deserializer::from_slice_with_buffers(json, input_buffer, string_buffer)?
@@ -92,16 +95,27 @@ pub trait Deserialize<'input> {
         Self::from_tape(&mut itr)
     }
 
+
+    #[allow(clippy::missing_safety_doc)]// it's literally right below this idk what it's mad about
     #[inline]
-    fn from_str(json: &'input mut str) -> simd_json::Result<Self>
+    /// # Safety:
+    ///
+    /// user must not use the string afterwards
+    /// as it most likely will no longer contain valid utf-8
+    unsafe fn from_str(json: &'input mut str) -> simd_json::Result<Self>
     where
-        Self: std::marker::Sized + 'input,
+        Self: Sized + 'input,
     {
-        unsafe { Self::from_slice(json.as_bytes_mut()) }
+        Self::from_slice(json.as_bytes_mut())
     }
+
+    fn from_string(mut json: String) -> simd_json::Result<Self>
+    where
+        Self: Sized + 'input + for<'de> Deserialize<'de>,
+    { unsafe { Self::from_slice(json.as_bytes_mut()) } }
 }
 
-struct DummyGenerator<W: Write>(W);
+pub(crate) struct DummyGenerator<W: Write>(W);
 impl<W: Write> BaseGenerator for DummyGenerator<W> {
     type T = W;
     #[inline]

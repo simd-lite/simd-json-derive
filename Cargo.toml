@@ -26,6 +26,7 @@ itoa = "1"
 ryu = "1"
 chrono = { version = "0.4", optional = true }
 simd-json = '0.10.2'
+heap-array = { version = "0.1.1", optional = true }
 
 [dev-dependencies]
 serde_json = "1"
@@ -42,6 +43,7 @@ allow-non-simd = [
     "simd-json-derive-int/allow-non-simd",
     "simd-json/allow-non-simd",
 ]
+heap-array = ["dep:heap-array"]
 
 [package.metadata.docs.rs]
 features = ["allow-non-simd"]

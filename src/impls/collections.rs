@@ -1,5 +1,10 @@
 use std::ops::Range;
 
+#[cfg(feature = "heap-array")]
+use heap_array::HeapArray;
+
+use collections::HashMap;
+use collections::BTreeMap;
 use crate::*;
 
 macro_rules! vec_like {
@@ -38,7 +43,7 @@ where
     #[inline]
     fn from_tape(tape: &mut Tape<'input>) -> simd_json::Result<Self>
     where
-        Self: std::marker::Sized + 'input,
+        Self: Sized + 'input,
     {
         match tape.next() {
             Some(simd_json::Node::Array(size, _)) => {
@@ -74,7 +79,7 @@ where
     #[inline]
     fn from_tape(tape: &mut Tape<'input>) -> simd_json::Result<Self>
     where
-        Self: std::marker::Sized + 'input,
+        Self: Sized + 'input,
     {
         if let Some(simd_json::Node::Array(size, _)) = tape.next() {
             let mut v = collections::VecDeque::new();
@@ -97,7 +102,7 @@ where
     #[inline]
     fn from_tape(tape: &mut Tape<'input>) -> simd_json::Result<Self>
     where
-        Self: std::marker::Sized + 'input,
+        Self: Sized + 'input,
     {
         if let Some(simd_json::Node::Array(size, _)) = tape.next() {
             let mut v = collections::BinaryHeap::new();
@@ -120,7 +125,7 @@ where
     #[inline]
     fn from_tape(tape: &mut Tape<'input>) -> simd_json::Result<Self>
     where
-        Self: std::marker::Sized + 'input,
+        Self: Sized + 'input,
     {
         if let Some(simd_json::Node::Array(size, _)) = tape.next() {
             let mut v = collections::BTreeSet::new();
@@ -143,7 +148,7 @@ where
     #[inline]
     fn from_tape(tape: &mut Tape<'input>) -> simd_json::Result<Self>
     where
-        Self: std::marker::Sized + 'input,
+        Self: Sized + 'input,
     {
         if let Some(simd_json::Node::Array(size, _)) = tape.next() {
             let mut v = collections::LinkedList::new();
@@ -190,7 +195,7 @@ where
     #[inline]
     fn from_tape(tape: &mut Tape<'input>) -> simd_json::Result<Self>
     where
-        Self: std::marker::Sized + 'input,
+        Self: Sized + 'input,
     {
         if let Some(simd_json::Node::Array(size, _)) = tape.next() {
             let mut v = collections::HashSet::with_capacity_and_hasher(size, H::default());
@@ -206,37 +211,44 @@ where
     }
 }
 
-impl<K, V, H> Serialize for collections::HashMap<K, V, H>
-where
-    K: SerializeAsKey,
-    V: Serialize,
-    H: std::hash::BuildHasher,
-{
-    #[inline]
-    fn json_write<W>(&self, writer: &mut W) -> Result
-    where
-        W: Write,
-    {
-        let mut i = self.iter();
-        if let Some((k, v)) = i.next() {
-            writer.write_all(b"{")?;
-            k.json_write(writer)?;
-            writer.write_all(b":")?;
-            v.json_write(writer)?;
-            for (k, v) in i {
-                writer.write_all(b",")?;
-                k.json_write(writer)?;
-                writer.write_all(b":")?;
-                v.json_write(writer)?;
+macro_rules! ser_map_like {
+    ($name:ident <$($generic:ident: $constraint:tt),*>) => {
+        impl<$($generic: $constraint),*> Serialize for $name<$($generic),*> {
+            #[inline]
+            fn json_write<W>(&self, writer: &mut W) -> Result
+            where
+                W: Write,
+            {
+                let mut i = self.iter();
+                if let Some((k, v)) = i.next() {
+                    writer.write_all(b"{")?;
+                    k.json_write(writer)?;
+                    writer.write_all(b":")?;
+                    v.json_write(writer)?;
+                    for (k, v) in i {
+                        writer.write_all(b",")?;
+                        k.json_write(writer)?;
+                        writer.write_all(b":")?;
+                        v.json_write(writer)?;
+                    }
+                    writer.write_all(b"}")
+                } else {
+                    writer.write_all(b"{}")
+                }
             }
-            writer.write_all(b"}")
-        } else {
-            writer.write_all(b"{}")
         }
-    }
+    };
+}
+macro_rules! de_map_like {
+    ($name:ident <$($generic:ident: $constraint:tt),*>) => {
+
+    };
 }
 
-impl<'input, K, V, H> Deserialize<'input> for collections::HashMap<K, V, H>
+ser_map_like!(HashMap<K: SerializeAsKey, V: Serialize, H: (std::hash::BuildHasher)>);
+ser_map_like!(BTreeMap<K: SerializeAsKey, V: Serialize>);
+
+impl<'input, K, V, H> Deserialize<'input> for HashMap<K, V, H>
 where
     K: Deserialize<'input> + std::hash::Hash + Eq,
     V: Deserialize<'input>,
@@ -245,10 +257,10 @@ where
     #[inline]
     fn from_tape(tape: &mut Tape<'input>) -> simd_json::Result<Self>
     where
-        Self: std::marker::Sized + 'input,
+        Self: Sized + 'input,
     {
         if let Some(simd_json::Node::Object(size, _)) = tape.next() {
-            let mut v = collections::HashMap::with_capacity_and_hasher(size, H::default());
+            let mut v = HashMap::with_capacity_and_hasher(size, H::default());
             for _ in 0..size {
                 let k = K::from_tape(tape)?;
                 v.insert(k, V::from_tape(tape)?);
@@ -260,35 +272,7 @@ where
     }
 }
 
-impl<K, V> Serialize for collections::BTreeMap<K, V>
-where
-    K: SerializeAsKey,
-    V: Serialize,
-{
-    #[inline]
-    fn json_write<W>(&self, writer: &mut W) -> Result
-    where
-        W: Write,
-    {
-        let mut i = self.iter();
-        if let Some((k, v)) = i.next() {
-            writer.write_all(b"{")?;
-            k.json_write(writer)?;
-            writer.write_all(b":")?;
-            v.json_write(writer)?;
-            for (k, v) in i {
-                writer.write_all(b",")?;
-                k.json_write(writer)?;
-                writer.write_all(b":")?;
-                v.json_write(writer)?;
-            }
-            writer.write_all(b"}")
-        } else {
-            writer.write_all(b"{}")
-        }
-    }
-}
-impl<'input, K, V> Deserialize<'input> for collections::BTreeMap<K, V>
+impl<'input, K, V> Deserialize<'input> for BTreeMap<K, V>
 where
     K: Deserialize<'input> + Ord,
     V: Deserialize<'input>,
@@ -296,10 +280,10 @@ where
     #[inline]
     fn from_tape(tape: &mut Tape<'input>) -> simd_json::Result<Self>
     where
-        Self: std::marker::Sized + 'input,
+        Self: Sized + 'input,
     {
         if let Some(simd_json::Node::Object(size, _)) = tape.next() {
-            let mut v = collections::BTreeMap::new();
+            let mut v = BTreeMap::new();
             for _ in 0..size {
                 let k = K::from_tape(tape)?;
                 v.insert(k, V::from_tape(tape)?);
@@ -335,7 +319,7 @@ where
     #[inline]
     fn from_tape(tape: &mut Tape<'input>) -> simd_json::Result<Self>
     where
-        Self: std::marker::Sized + 'input,
+        Self: Sized + 'input,
     {
         if let Some(simd_json::Node::Object(2, _)) = tape.next() {
             match tape.next() {
@@ -345,7 +329,6 @@ where
                         let end = Deserialize::from_tape(tape)?;
                         Ok(start..end)
                     } else {
-                        // FIXME
                         Err(simd_json::Error::generic(
                             simd_json::ErrorType::ExpectedString,
                         ))
@@ -357,7 +340,6 @@ where
                         let start = Deserialize::from_tape(tape)?;
                         Ok(start..end)
                     } else {
-                        // FIXME
                         Err(simd_json::Error::generic(
                             simd_json::ErrorType::ExpectedString,
                         ))
@@ -372,6 +354,23 @@ where
         }
     }
 }
+
+#[cfg(feature = "heap-array")]
+vec_like!(HeapArray<T>);
+
+#[cfg(feature = "heap-array")]
+impl<'input, T: Deserialize<'input>> Deserialize<'input> for HeapArray<T> {
+    fn from_tape(tape: &mut Tape<'input>) -> simd_json::Result<Self> where Self: Sized + 'input {
+        if let Some(simd_json::Node::Array(size, _)) = tape.next() {
+            HeapArray::try_from_fn(size, |_| T::from_tape(tape))
+        } else {
+            Err(simd_json::Error::generic(
+                simd_json::ErrorType::ExpectedArray,
+            ))
+        }
+    }
+}
+
 #[cfg(test)]
 mod test {
     use std::ops::Range;
@@ -385,19 +384,19 @@ mod test {
         v.push(1);
         let mut s = v.json_string().unwrap();
         assert_eq!(s, "[1]");
-        let s: Vec<u8> = Vec::from_str(s.as_mut_str()).unwrap();
+        let s: Vec<u8> = unsafe { Vec::from_str(s.as_mut_str()) }.unwrap();
         assert_eq!(s, v);
 
         v.push(2);
         let mut s = v.json_string().unwrap();
         assert_eq!(s, "[1,2]");
-        let s: Vec<u8> = Vec::from_str(s.as_mut_str()).unwrap();
+        let s: Vec<u8> = unsafe { Vec::from_str(s.as_mut_str()) }.unwrap();
         assert_eq!(s, v);
 
         v.push(3);
         let mut s = v.json_string().unwrap();
         assert_eq!(s, "[1,2,3]");
-        let s: Vec<u8> = Vec::from_str(s.as_mut_str()).unwrap();
+        let s: Vec<u8> = unsafe { Vec::from_str(s.as_mut_str()) }.unwrap();
         assert_eq!(s, v);
     }
 

@@ -23,7 +23,7 @@ fn rename() {
     println!("{}", &serialized);
 
     assert_eq!(r#"{"f3":1,"f4":"snot","f1":"snot","f5":8}"#, serialized);
-    let b1 = Bla::from_str(&mut serialized).expect("Expected serde roundtrip with rename to work");
+    let b1 = unsafe { Bla::from_str(&mut serialized) }.expect("Expected serde roundtrip with rename to work");
     println!("{:?}", &b1);
     assert_eq!(b, b1);
 }

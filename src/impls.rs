@@ -10,19 +10,6 @@ mod tpl;
 use crate::*;
 use value_trait::generator::BaseGenerator;
 
-struct DummyGenerator<W: Write>(W);
-impl<W: Write> BaseGenerator for DummyGenerator<W> {
-    type T = W;
-    #[inline]
-    fn get_writer(&mut self) -> &mut <Self as BaseGenerator>::T {
-        &mut self.0
-    }
-    #[inline]
-    fn write_min(&mut self, _: &[u8], _: u8) -> io::Result<()> {
-        unimplemented!()
-    }
-}
-
 impl<T> Serialize for Option<T>
 where
     T: Serialize,
@@ -47,7 +34,7 @@ where
     #[inline]
     fn from_tape(tape: &mut Tape<'input>) -> simd_json::Result<Self>
     where
-        Self: std::marker::Sized + 'input,
+        Self: Sized + 'input,
     {
         if let Some(simd_json::Node::Static(simd_json::StaticNode::Null)) = tape.peek() {
             tape.next();
@@ -91,7 +78,7 @@ where
     #[inline]
     fn from_tape(tape: &mut Tape<'input>) -> simd_json::Result<Self>
     where
-        Self: std::marker::Sized + 'input,
+        Self: Sized + 'input,
     {
         if let Some(simd_json::Node::Object(1, _)) = tape.next() {
             match tape.next() {
