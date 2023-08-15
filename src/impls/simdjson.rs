@@ -35,16 +35,27 @@ impl<'input, 'tape> OwnedDeser<'input, 'tape> {
     #[inline(always)]
     #[allow(clippy::uninit_vec)]
     fn parse_array(&mut self, len: usize) -> OwnedValue {
-        // Rust doens't optimize the normal loop away here
-        // so we write our own avoiding the lenght
-        // checks during push
         let mut res: Vec<OwnedValue> = Vec::with_capacity(len);
-        unsafe {
-            res.set_len(len);
-            for i in 0..len {
-                std::ptr::write(res.get_unchecked_mut(i), self.parse().unwrap());
-            }
+        for _ in 0..len {
+            res.push(self.parse().unwrap())
         }
+
+        // Sorry but the bellow code can cause memory UB
+        // if parse panics, or if unwrap panics
+        // now lets say some uninit value within the array was
+        // was Value::String(Cow::Owned(some_string)))
+        // now res.drop() -> for i in 0..res.len (*res.ptr).drop() -> calls uninit.drop() -> dealloc(unowned memory)
+        // and there you go freeing memory you dont own
+        //
+        //      Rust doesn't optimize the normal loop away here
+        //      so we write our own avoiding the length
+        //      checks during push
+        //      unsafe {
+        //          res.set_len(len);
+        //          for i in 0..len {
+        //              std::ptr::write(res.get_unchecked_mut(i), self.parse().unwrap());
+        //          }
+        //      }
         OwnedValue::Array(res)
     }
 
@@ -91,16 +102,30 @@ impl<'input, 'tape> BorrowedDeser<'input, 'tape> {
     #[inline(always)]
     #[allow(clippy::uninit_vec)]
     fn parse_array(&mut self, len: usize) -> BorrowedValue<'input> {
-        // Rust doens't optimize the normal loop away here
-        // so we write our own avoiding the lenght
-        // checks during push
         let mut res = Vec::with_capacity(len);
-        unsafe {
-            res.set_len(len);
-            for i in 0..len {
-                std::ptr::write(res.get_unchecked_mut(i), self.parse().unwrap());
-            }
+        for _ in 0..len {
+            res.push(self.parse().unwrap())
         }
+
+        // Sorry but the bellow code can cause memory UB
+        // if parse panics, or if unwrap panics
+        // now lets say some uninit value within the array was
+        // was Value::String(Cow::Owned(some_string)))
+        // now res.drop() -> for i in 0..res.len (*res.ptr).drop() -> calls uninit.drop() -> dealloc(unowned memory)
+        // and there you go freeing memory you dont own
+        // not only that but parse_array can fail with unexpected Eof
+        // but that causes a panic, I'm not dedicated enough to go refactor this
+        // so please refactor that after my pull ok
+        //
+        //      Rust doesn't optimize the normal loop away here
+        //      so we write our own avoiding the length
+        //      checks during push
+        //      unsafe {
+        //          res.set_len(len);
+        //          for i in 0..len {
+        //              std::ptr::write(res.get_unchecked_mut(i), self.parse().unwrap());
+        //          }
+        //      }
         BorrowedValue::Array(res)
     }
 

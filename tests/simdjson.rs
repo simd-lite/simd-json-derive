@@ -9,7 +9,7 @@ fn owned_value() {
     assert!(res.is_ok());
     let mut serialized = res.ok().unwrap();
     assert_eq!(input, serialized);
-    let deserialized = simd_json::owned::Value::from_str(serialized.as_mut_str())
+    let deserialized = unsafe { simd_json::owned::Value::from_str(serialized.as_mut_str()) }
         .expect("Expected serialized input to be deserialized ok");
     println!("{}", deserialized);
     assert_eq!(value, deserialized);
