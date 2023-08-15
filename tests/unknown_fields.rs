@@ -11,7 +11,7 @@ fn deny_unknown_fields() {
     }
 
     let mut s = r#"{"snot":"foo", "badger":0.5, "unknown": "bla"}"#.to_string();
-    let res = Strict::from_str(s.as_mut_str());
+    let res = unsafe { Strict::from_str(s.as_mut_str()) };
     assert!(res.is_err());
     let err = res.err().unwrap();
     assert!(err
@@ -67,7 +67,7 @@ fn missing_required_fields() {
     }
 
     let mut s = r#"{}"#.to_string();
-    let res = SomeFields::from_str(s.as_mut_str());
+    let res = unsafe { SomeFields::from_str(s.as_mut_str()) };
     assert!(res.is_err());
     let err = res.err().unwrap();
     assert!(
@@ -77,7 +77,7 @@ fn missing_required_fields() {
     );
 
     s = r#"{"snot": [65535, 65536]}"#.to_string();
-    let res = SomeFields::from_str(s.as_mut_str());
+    let res = unsafe { SomeFields::from_str(s.as_mut_str()) };
     assert!(res.is_err());
     let err = res.err().unwrap();
     assert!(

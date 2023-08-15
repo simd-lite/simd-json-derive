@@ -26,6 +26,7 @@ itoa = "1"
 ryu = "1"
 chrono = { version = "0.4", optional = true }
 simd-json = { version = "0.13.0" }
+heap-array = { version = "0.1.1", optional = true }
 
 [dev-dependencies]
 serde_json = "1"
@@ -38,6 +39,7 @@ rand = "0.8"
 default = ["impl-chrono"]
 impl-chrono = ["chrono"]
 128bit = ["simd-json-derive-int/128bit", "simd-json/128bit"]
+heap-array = ["dep:heap-array"]
 
 
 [[example]]

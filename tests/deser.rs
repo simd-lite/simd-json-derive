@@ -39,7 +39,7 @@ fn deser() {
     let mut s = b.json_string().unwrap();
     println!("{}", s);
     assert_eq!(r#"{"f1":1,"f2":"snot","f3":"Snot"}"#, s);
-    let b1 = Bla::from_str(s.as_mut_str()).unwrap();
+    let b1 = unsafe { Bla::from_str(s.as_mut_str()) }.unwrap();
     assert_eq!(b, b1);
 }
 
@@ -54,7 +54,7 @@ fn opt() {
     }
 
     let mut s = String::from(r#"{"name":"snot"}"#);
-    let b = Bla::from_str(s.as_mut_str()).unwrap();
+    let b = unsafe { Bla::from_str(s.as_mut_str()) }.unwrap();
     assert_eq!(
         b,
         Bla {
@@ -64,7 +64,7 @@ fn opt() {
     );
 
     let mut s = String::from(r#"{"name":"snot", "logo": null}"#);
-    let b = Bla::from_str(s.as_mut_str()).unwrap();
+    let b = unsafe { Bla::from_str(s.as_mut_str()) }.unwrap();
     assert_eq!(
         b,
         Bla {
@@ -74,7 +74,7 @@ fn opt() {
     );
 
     let mut s = String::from(r#"{"name":"snot", "logo": "badger"}"#);
-    let b = Bla::from_str(s.as_mut_str()).unwrap();
+    let b = unsafe { Bla::from_str(s.as_mut_str()) }.unwrap();
     assert_eq!(
         b,
         Bla {
@@ -84,22 +84,24 @@ fn opt() {
     );
 
     let mut s = String::from(r#"{"logo": "badger"}"#);
-    assert!(Bla::from_str(s.as_mut_str()).is_err());
+    unsafe { assert!(Bla::from_str(s.as_mut_str()).is_err()); }
 
     let mut s = String::from(r#"{}"#);
-    assert!(Bla::from_str(s.as_mut_str()).is_err());
+    unsafe { assert!(Bla::from_str(s.as_mut_str()).is_err()); }
 
     let mut s = String::from(r#"{"name":"snot", "logo": 42}"#);
-    assert!(Bla::from_str(s.as_mut_str()).is_err());
+    unsafe { assert!(Bla::from_str(s.as_mut_str()).is_err()); }
 
     let mut s = String::from(r#"{"name":"snot", "logo": "badger", "snot":42}"#);
-    assert_eq!(
-        Bla {
-            name: MyString("snot".to_string()),
-            logo: Some("badger".to_string())
-        },
-        Bla::from_str(s.as_mut_str()).expect("Didn't ignore unknown field 'snot'")
-    );
+    unsafe {
+        assert_eq!(
+            Bla {
+                name: MyString("snot".to_string()),
+                logo: Some("badger".to_string())
+            },
+            Bla::from_str(s.as_mut_str()).expect("Didn't ignore unknown field 'snot'")
+        );
+    }
 }
 #[test]
 fn event() {
@@ -112,7 +114,7 @@ fn event() {
     }
 
     let mut s = String::from(r#"{"id":[[0,0]]}"#);
-    let e = Event::from_str(s.as_mut_str()).unwrap();
+    let e = unsafe { Event::from_str(s.as_mut_str()) }.unwrap();
 
     assert_eq!(
         e,
@@ -134,19 +136,19 @@ fn enum_ser() {
     }
 
     let mut s = String::from(r#"{"Small":[1,2]}"#);
-    let e = StoredVariants::from_str(s.as_mut_str()).unwrap();
+    let e = unsafe { StoredVariants::from_str(s.as_mut_str()) }.unwrap();
     assert_eq!(StoredVariants::Small(1, 2), e);
 
     let mut s = String::from(r#"{"YesNo":true}"#);
-    let e = StoredVariants::from_str(s.as_mut_str()).unwrap();
+    let e = unsafe { StoredVariants::from_str(s.as_mut_str()) }.unwrap();
     assert_eq!(StoredVariants::YesNo(true), e);
 
     let mut s = String::from(r#"{"Res":{"Ok":42}}"#);
-    let e = StoredVariants::from_str(s.as_mut_str()).unwrap();
+    let e = unsafe { StoredVariants::from_str(s.as_mut_str()) }.unwrap();
     assert_eq!(StoredVariants::Res(Ok(42)), e);
 
     let mut s = String::from(r#"{"Res":{"Err":"snot"}}"#);
-    let e = StoredVariants::from_str(s.as_mut_str()).unwrap();
+    let e = unsafe { StoredVariants::from_str(s.as_mut_str()) }.unwrap();
     assert_eq!(StoredVariants::Res(Err(String::from("snot"))), e);
 
     let e = StoredVariants::Res(Ok(42)).json_string().unwrap();

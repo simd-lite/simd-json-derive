@@ -33,7 +33,7 @@ fn named() {
     let mut s = b.json_string().unwrap();
     println!("{}", s);
     assert_eq!(r#"{"f1":1,"f2":"snot"}"#, s);
-    let b1 = Bla::from_str(s.as_mut_str()).unwrap();
+    let b1 = unsafe { Bla::from_str(s.as_mut_str()) }.unwrap();
     assert_eq!(b, b1);
 }
 
@@ -80,13 +80,15 @@ fn borrowed() {
         id_str: &'sin str,
     }
     let mut s = r#"{"id":23,"id_str":"42"}"#.to_string();
-    assert_eq!(
-        SIMDExample {
-            id: 23,
-            id_str: "42"
-        },
-        SIMDExample::from_str(s.as_mut_str()).unwrap()
-    );
+    unsafe {
+        assert_eq!(
+            SIMDExample {
+                id: 23,
+                id_str: "42"
+            },
+            SIMDExample::from_str(s.as_mut_str()).unwrap()
+        );
+    }
 }
 
 #[test]
@@ -103,5 +105,5 @@ fn tpl_array() {
     println!("{}", b.json_string().unwrap());
     let mut s = r#"{"tpl":[1,2],"array":[3,4]}"#.to_string();
     assert_eq!(s, b.json_string().unwrap());
-    assert_eq!(b, Bla::from_str(s.as_mut_str()).unwrap());
+    unsafe { assert_eq!(b, Bla::from_str(s.as_mut_str()).unwrap()); }
 }
