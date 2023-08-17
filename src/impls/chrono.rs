@@ -10,7 +10,7 @@ impl<Tz: TimeZone> Serialize for DateTime<Tz> {
     /// serializations.
     fn json_write<W>(&self, writer: &mut W) -> io::Result<()>
     where
-        W: io::Write,
+        W: Write,
     {
         struct FormatWrapped<'a, D: 'a> {
             inner: &'a D,
@@ -31,7 +31,7 @@ impl<'input> Deserialize<'input> for DateTime<FixedOffset> {
     #[inline]
     fn from_tape(tape: &mut Tape<'input>) -> simd_json::Result<Self>
     where
-        Self: std::marker::Sized + 'input,
+        Self: Sized + 'input,
     {
         match tape.next() {
             Some(simd_json::Node::String(s)) => DateTime::parse_from_rfc2822(s)

@@ -3,24 +3,17 @@ use std::convert::TryFrom;
 
 impl Serialize for bool {
     #[inline]
-    fn json_write<W>(&self, writer: &mut W) -> Result
-    where
-        W: Write,
-    {
-        if *self {
-            writer.write_all(b"true")
-        } else {
-            writer.write_all(b"false")
+    fn json_write<W: Write>(&self, writer: &mut W) -> Result {
+        match *self {
+            true  => {writer.write_all(b"true" )}
+            false => {writer.write_all(b"false")}
         }
     }
 }
 
 impl<'input> Deserialize<'input> for bool {
     #[inline]
-    fn from_tape(tape: &mut Tape<'input>) -> simd_json::Result<Self>
-    where
-        Self: Sized + 'input,
-    {
+    fn from_tape(tape: &mut Tape<'input>) -> simd_json::Result<bool> {
         if let Some(simd_json::Node::Static(simd_json::StaticNode::Bool(r))) = tape.next() {
             Ok(r)
         } else {
@@ -117,7 +110,7 @@ impl<'input> Deserialize<'input> for f64 {
     #[inline]
     fn from_tape(tape: &mut Tape<'input>) -> simd_json::Result<Self>
     where
-        Self: std::marker::Sized + 'input,
+        Self: Sized + 'input,
     {
         match tape.next() {
             Some(simd_json::Node::Static(simd_json::StaticNode::F64(i))) => Ok(i),
