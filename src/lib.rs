@@ -122,8 +122,8 @@ impl<W: Write> BaseGenerator for DummyGenerator<W> {
     fn get_writer(&mut self) -> &mut <Self as BaseGenerator>::T {
         &mut self.0
     }
-    #[inline]
-    fn write_min(&mut self, _: &[u8], _: u8) -> io::Result<()> {
-        unimplemented!()
+    #[inline(always)]
+    fn write_min(&mut self, _: &[u8], b: u8) -> io::Result<()> {
+        self.0.write_all(&[b])
     }
 }
