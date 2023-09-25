@@ -109,12 +109,12 @@ fn derive_named_struct(
                                 }
                                 _ => {
                                     // ignore unknown field
+                                    ::simd_json_derive::__skip(1, __deser_tape)
                                 }
                             }
                         },
-                        _ => {
-                            unreachable!()
-                        }
+                        // There are no more elements
+                        _ => break
                     }
                 }
                 if (__seen & #all_needed) != #all_needed && __err.is_none() {
