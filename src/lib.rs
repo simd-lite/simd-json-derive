@@ -1,4 +1,4 @@
-use simd_json::AlignedBuf;
+use simd_json::{AlignedBuf, Node};
 pub use simd_json_derive_int::*;
 use std::collections;
 use std::io::{self, Write};
@@ -8,7 +8,23 @@ use value_trait::generator::BaseGenerator;
 mod impls;
 pub type Result = io::Result<()>;
 
-pub type Tape<'input> = Peekable<IntoIter<simd_json::Node<'input>>>;
+pub type Tape<'input> = Peekable<IntoIter<Node<'input>>>;
+
+pub fn __skip(n: usize, tape: &mut Peekable<IntoIter<Node>>) {
+    for _ in 0..n {
+        match tape.next() {
+            Some(Node::Array(elems, _)) => {
+                __skip(elems, tape);
+            }
+            Some(Node::Object(elems, _)) => {
+                // we need to skip keys and values
+                __skip(elems * 2, tape);
+            }
+            Some(_) => {}
+            None => return,
+        }
+    }
+}
 
 pub trait Serialize {
     fn json_write<W>(&self, writer: &mut W) -> Result
