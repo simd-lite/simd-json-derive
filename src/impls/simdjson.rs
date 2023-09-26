@@ -1,6 +1,6 @@
 use crate::{Deserialize, Serialize};
 use simd_json::{BorrowedValue, Node, OwnedValue};
-use value_trait::Writable;
+use value_trait::{Builder, Writable};
 
 impl Serialize for OwnedValue {
     fn json_write<W>(&self, writer: &mut W) -> crate::Result
@@ -50,18 +50,20 @@ impl<'input, 'tape> OwnedDeser<'input, 'tape> {
 
     #[inline(always)]
     fn parse_map(&mut self, len: usize) -> OwnedValue {
-        let mut res = simd_json::value::owned::Object::with_capacity(len);
+        let mut res = OwnedValue::object_with_capacity(len);
 
         // Since we checked if it's empty we know that we at least have one
         // element so we eat this
-        for _ in 0..len {
-            if let Node::String(key) = self.0.next().unwrap() {
-                res.insert_nocheck(key.into(), self.parse().unwrap());
-            } else {
-                unreachable!()
+        if let OwnedValue::Object(ref mut res) = res {
+            for _ in 0..len {
+                if let Node::String(key) = self.0.next().unwrap() {
+                    res.insert_nocheck(key.into(), self.parse().unwrap());
+                } else {
+                    unreachable!()
+                }
             }
         }
-        OwnedValue::from(res)
+        res
     }
 }
 impl<'input> Deserialize<'input> for OwnedValue {
@@ -104,18 +106,23 @@ impl<'input, 'tape> BorrowedDeser<'input, 'tape> {
 
     #[inline(always)]
     fn parse_map(&mut self, len: usize) -> BorrowedValue<'input> {
-        let mut res = simd_json::value::borrowed::Object::with_capacity(len);
+        let mut res = BorrowedValue::object_with_capacity(len);
 
         // Since we checked if it's empty we know that we at least have one
         // element so we eat this
-        for _ in 0..len {
-            if let Node::String(key) = self.0.next().unwrap() {
-                res.insert_nocheck(key.into(), self.parse().unwrap());
-            } else {
-                unreachable!()
+        if let BorrowedValue::Object(ref mut res) = res {
+            for _ in 0..len {
+                if let Node::String(key) = self.0.next().unwrap() {
+                    res.insert_nocheck(key.into(), self.parse().unwrap());
+                } else {
+                    unreachable!()
+                }
             }
+        } else {
+            unreachable!()
         }
-        BorrowedValue::from(res)
+
+        res
     }
 }
 impl<'input> Deserialize<'input> for BorrowedValue<'input> {
