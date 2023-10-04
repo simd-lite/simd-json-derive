@@ -23,7 +23,6 @@ fn derive_named_struct(
     let mut options = Vec::new();
     let mut ids = Vec::new();
     let mut opt_ids = Vec::new();
-    let mut id: u64 = 0;
     let mut all_needed: u64 = 0;
     let deny_unknown_fields: bool = attrs.deny_unknown_fields();
     let params = &generics.params;
@@ -32,7 +31,7 @@ fn derive_named_struct(
         Some(GenericParam::Lifetime(lifetime)) => (quote! { <#params> }, quote! { #lifetime }),
         Some(_) => (quote! { <'input, #params> }, quote! { 'input }),
     };
-    for f in &fields {
+    for (id, f) in fields.iter().enumerate() {
         let mut is_option = false;
         if let Type::Path(TypePath {
             path: Path { segments, .. },
@@ -44,25 +43,21 @@ fn derive_named_struct(
             }
         }
 
-        if let Some((name, ident)) = attrs
-            .name(f)
-            .and_then(|name| Some((name, f.ident.as_ref()?.clone())))
-        {
-            let name = name.trim_matches(':').trim_matches('"').to_string();
-            let bit = 1 << id;
-            id += 1;
-            if is_option {
-                options.push(ident.clone());
-                opt_ids.push(bit);
-                getters.push(quote! { #ident.and_then(::std::convert::identity) })
-            } else {
-                all_needed |= bit;
-                getters.push(quote! { #ident.expect(concat!("failed to get field ", #name))  })
-            }
-            keys.push(name);
-            values.push(ident);
-            ids.push(bit);
+        let ident = f.ident.clone().expect("Missing ident");
+        let name = attrs.name(f);
+        let name = name.trim_matches(':').trim_matches('"').to_string();
+        let bit = 1 << id;
+        if is_option {
+            options.push(ident.clone());
+            opt_ids.push(bit);
+            getters.push(quote! { #ident.and_then(::std::convert::identity) })
+        } else {
+            all_needed |= bit;
+            getters.push(quote! { #ident.expect(concat!("failed to get field ", #name))  })
         }
+        keys.push(name);
+        values.push(ident);
+        ids.push(bit);
     }
 
     let expanded = quote! {

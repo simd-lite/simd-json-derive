@@ -62,42 +62,91 @@ fn derive_named_struct(
 ) -> proc_macro::TokenStream {
     let mut keys = Vec::new();
     let mut values = Vec::new();
+    let mut skip_if = Vec::new();
 
     for f in &fields {
-        if let Some((name, ident)) = attrs
-            .name(f)
-            .and_then(|name| Some((name, f.ident.as_ref()?.clone())))
-        {
-            keys.push(name);
-            values.push(ident);
-        }
+        let ident = f.ident.clone().expect("Missing ident");
+        let name = attrs.name(f);
+        keys.push(name);
+        values.push(ident);
+        skip_if.push(attrs.skip_serializing_if(f));
     }
+    let expanded = if skip_if.iter().all(Option::is_none) {
+        if let Some((first, rest)) = keys.split_first_mut() {
+            *first = format!("{{{}", first);
+            for r in rest {
+                *r = format!(",{}", r);
+            }
+        };
 
-    if let Some((first, rest)) = keys.split_first_mut() {
-        *first = format!("{{{}", first);
-        for r in rest {
-            *r = format!(",{}", r);
+        quote! {
+            impl #generics simd_json_derive::Serialize for #ident #generics {
+                #[inline]
+                fn json_write<W>(&self, writer: &mut W) -> std::io::Result<()>
+                where
+                    W: std::io::Write {
+                        #(
+                            writer.write_all(#keys.as_bytes())?;
+                            self.#values.json_write(writer)?;
+                        )*
+                        writer.write_all(b"}")
+                    }
+            }
         }
-    };
-
-    let expanded = quote! {
-        impl #generics simd_json_derive::Serialize for #ident #generics {
-            #[inline]
-            fn json_write<W>(&self, writer: &mut W) -> std::io::Result<()>
-            where
-                W: std::io::Write {
-                    #(
-                        writer.write_all(#keys.as_bytes())?;
-                        self.#values.json_write(writer)?;
-                    )*
-                    writer.write_all(b"}")
+    } else {
+        let writes = keys
+            .iter()
+            .zip(values.iter())
+            .zip(skip_if.iter())
+            .map(|((k, v), s)| {
+                if let Some(s) = s {
+                    quote! {
+                        if !#s(&self.#v) {
+                            if has_written_key {
+                                writer.write_all(b",")?;
+                            }
+                            has_written_key = true;
+                            writer.write_all(#k.as_bytes())?;
+                            self.#v.json_write(writer)?;
+                        }
+                    }
+                } else {
+                    quote! {
+                        if has_written_key {
+                            writer.write_all(b",")?;
+                        }
+                        has_written_key = true;
+                        writer.write_all(#k.as_bytes())?;
+                        self.#v.json_write(writer)?;
+                    }
                 }
+            })
+            .collect::<Vec<_>>();
+        quote! {
+            impl #generics simd_json_derive::Serialize for #ident #generics {
+                #[inline]
+                fn json_write<W>(&self, writer: &mut W) -> std::io::Result<()>
+                where
+                    W: std::io::Write {
+                        writer.write_all(b"{")?;
+                        let mut has_written_key = false;
+                        #(
+                            #writes
+                        )*
+                        writer.write_all(b"}")
+                    }
+            }
         }
     };
     TokenStream::from(expanded)
 }
 
-fn derive_enum(ident: Ident, data: DataEnum, generics: Generics) -> TokenStream {
+fn derive_enum(
+    attrs: StructAttrs,
+    ident: Ident,
+    data: DataEnum,
+    generics: Generics,
+) -> TokenStream {
     let mut body_elements = Vec::new();
     let variants = data.variants;
     let (simple, variants): (Vec<_>, Vec<_>) =
@@ -222,34 +271,81 @@ fn derive_enum(ident: Ident, data: DataEnum, generics: Generics) -> TokenStream 
     let mut named_bodies = Vec::new();
     for v in named {
         let named_ident = &v.ident;
-        let fields: Vec<_> = v
-            .fields
-            .iter()
-            .cloned()
-            .map(|f| f.ident.expect("no field ident"))
-            .collect();
-        let (first, rest) = fields.split_first().expect("zero fields");
+        let mut keys = Vec::new();
+        let mut values = Vec::new();
+        let mut skip_if = Vec::new();
 
-        let start = format!(
-            "{{{}:{{{}:",
-            simd_json::OwnedValue::from(v.ident.to_string()).encode(),
-            simd_json::OwnedValue::from(first.to_string()).encode()
-        );
+        for f in &v.fields {
+            let name = attrs.name(f);
+            let ident = f.ident.clone().expect("Missing ident");
+            keys.push(name);
+            values.push(ident);
+            skip_if.push(attrs.skip_serializing_if(f));
+        }
+        let variant_name = simd_json::OwnedValue::from(v.ident.to_string()).encode();
 
-        let rest_keys = rest
-            .iter()
-            .map(|f| format!(",{}:", simd_json::OwnedValue::from(f.to_string()).encode()));
+        named_bodies.push(if skip_if.iter().all(Option::is_none) {
+            let (first_key, rest_keys) = keys.split_first().expect("zero fields");
+            let (first_value, rest_values) = values.split_first().expect("zero fields");
 
-        named_bodies.push(quote! {
-            #ident::#named_ident{#(#fields),*} => {
-                writer.write_all(#start.as_bytes())?;
-                #first.json_write(writer)?;
-                #(
-                    writer.write_all(#rest_keys.as_bytes())?;
-                    #rest.json_write(writer)?;
+            let start = format!("{{{variant_name}:{{{first_key}",);
+            let rest_keys = rest_keys
+                .iter()
+                .map(|k| format!(",{k}"))
+                .collect::<Vec<_>>();
 
-                )*
-                writer.write_all(b"}}")
+            quote! {
+                #ident::#named_ident{#(#values),*} => {
+                    writer.write_all(#start.as_bytes())?;
+                    #first_value.json_write(writer)?;
+                    #(
+                        writer.write_all(#rest_keys.as_bytes())?;
+                        #rest_values.json_write(writer)?;
+
+                    )*
+                    writer.write_all(b"}}")
+                }
+            }
+        } else {
+            let writes = keys
+                .iter()
+                .zip(values.iter())
+                .zip(skip_if.iter())
+                .map(|((k, v), s)| {
+                    if let Some(s) = s {
+                        quote! {
+
+                            if !#s(#v) {
+                                if has_written_key {
+                                    writer.write_all(b",")?;
+                                }
+                                has_written_key = true;
+                                writer.write_all(#k.as_bytes())?;
+                                #v.json_write(writer)?;
+                            }
+                        }
+                    } else {
+                        quote! {
+                            if has_written_key {
+                                writer.write_all(b",")?;
+                            }
+                            has_written_key = true;
+                            writer.write_all(#k.as_bytes())?;
+                            #v.json_write(writer)?;
+                        }
+                    }
+                })
+                .collect::<Vec<_>>();
+            let prefix = format!("{{{variant_name}:{{");
+            quote! {
+                #ident::#named_ident{#(#values),*} => {
+                    writer.write_all(#prefix.as_bytes())?;
+                    let mut has_written_key = false;
+                    #(
+                        #writes
+                    )*
+                    writer.write_all(b"}}")
+                }
             }
         });
     }
@@ -318,8 +414,18 @@ pub(crate) fn derive(input: TokenStream) -> TokenStream {
             ident,
             data: Data::Enum(data),
             generics,
+            attrs,
             ..
-        } => derive_enum(ident, data, generics),
+        } => {
+            let attrs = if let Some(attrs) = get_attr(&attrs, "simd_json") {
+                struct_attrs(attrs)
+            } else if let Some(attrs) = get_attr(&attrs, "serde") {
+                struct_attrs(attrs)
+            } else {
+                StructAttrs::default()
+            };
+            derive_enum(attrs, ident, data, generics)
+        }
         _ => TokenStream::from(quote! {}),
     }
 }
