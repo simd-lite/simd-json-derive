@@ -54,6 +54,7 @@ impl Parse for FieldAttrs {
 pub(crate) enum RenameAll {
     None,
     CamelCase,
+    Lowercase,
 }
 
 fn capitalize(field: &str) -> String {
@@ -68,6 +69,7 @@ impl RenameAll {
     fn apply(&self, field: &str) -> String {
         match self {
             RenameAll::None => String::from(field),
+            RenameAll::Lowercase => field.to_lowercase(),
             RenameAll::CamelCase => {
                 let mut parts = field.split('_');
                 let first = parts.next().expect("zero length name");
@@ -108,6 +110,7 @@ impl Parse for StructAttrs {
 
                     match name.to_string().as_str() {
                         r#""camelCase""# => rename_all = RenameAll::CamelCase,
+                        r#""lowercase""# => rename_all = RenameAll::Lowercase,
                         other => {
                             return Err(syn::Error::new(
                                 attr.span(),
