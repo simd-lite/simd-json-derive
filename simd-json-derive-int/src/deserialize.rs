@@ -68,8 +68,8 @@ fn derive_named_struct(
                 Self: std::marker::Sized + #derive_lt
             {
                 use ::serde::de::Error;
-                let __deser_size: usize = if let Some(::simd_json::Node::Object(size, _)) = __deser_tape.next() {
-                    size
+                let __deser_len: usize = if let Some(::simd_json::Node::Object{len, ..}) = __deser_tape.next() {
+                    len
                 } else {
                     return Err(::simd_json::Error::generic(::simd_json::ErrorType::ExpectedMap));
                 };
@@ -77,7 +77,7 @@ fn derive_named_struct(
                 #(let mut #value_locals = None;)*
                 #(let mut #option_locals = None;)*
 
-                for _ in 0..__deser_size {
+                for _ in 0..__deser_len {
                     match __deser_tape.next() {
                         Some(::simd_json::Node::String(__deser_key)) =>  {
                             match __deser_key {
@@ -230,7 +230,7 @@ fn derive_enum(
         #(
             Some(::simd_json::Node::String(#unnamed_values)) => {
                 match __deser_tape.next() {
-                  Some(::simd_json::Node::Array(#unnamed_len, _)) => Ok(#ident::#unnamed_keys(#unnamed_fields)),
+                  Some(::simd_json::Node::Array{len: #unnamed_len, ..}) => Ok(#ident::#unnamed_keys(#unnamed_fields)),
                   _ => Err(::simd_json::Error::generic(::simd_json::ErrorType::ExpectedArray))   // FIXME
                 }
 
@@ -266,7 +266,7 @@ fn derive_enum(
             {
                 match __deser_tape.next() {
                     #simple
-                    Some(::simd_json::Node::Object(1, _)) => {
+                    Some(::simd_json::Node::Object{len: 1, ..}) => {
                         match __deser_tape.next() {
                             #unnamed1
                             #unnamed

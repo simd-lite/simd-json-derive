@@ -93,7 +93,7 @@ where
     where
         Self: std::marker::Sized + 'input,
     {
-        if let Some(simd_json::Node::Object(1, _)) = tape.next() {
+        if let Some(simd_json::Node::Object { len: 1, .. }) = tape.next() {
             match tape.next() {
                 Some(simd_json::Node::String("Ok")) => Ok(Ok(TOk::from_tape(tape)?)),
                 Some(simd_json::Node::String("Err")) => Ok(Err(TErr::from_tape(tape)?)),

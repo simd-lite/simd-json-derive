@@ -1,5 +1,4 @@
 use criterion::{black_box, criterion_group, criterion_main, BatchSize, Criterion, Throughput};
-use simd_json::AlignedBuf;
 use simd_json_derive::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, serde::Serialize, serde::Deserialize)]
@@ -45,8 +44,7 @@ fn deserialize_mesh(c: &mut Criterion) {
         let input = mesh.json_vec().unwrap();
         group.throughput(Throughput::Bytes(input.len() as u64));
 
-        let mut input_buffer = AlignedBuf::with_capacity(BUFFER_LEN);
-        let mut string_buffer = vec![0; BUFFER_LEN];
+        let mut buffer = simd_json::Buffers::new(BUFFER_LEN);
 
         group.bench_function(format!("simd({i})"), |b| {
             b.iter_batched_ref(
@@ -55,8 +53,7 @@ fn deserialize_mesh(c: &mut Criterion) {
                     black_box(
                         Mesh::from_slice_with_buffers(
                             deserialize_buffer.as_mut_slice(),
-                            &mut input_buffer,
-                            string_buffer.as_mut_slice(),
+                            &mut buffer,
                         )
                         .unwrap(),
                     );
