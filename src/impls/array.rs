@@ -46,7 +46,7 @@ macro_rules! array_impls {
                 where
                     Self: std::marker::Sized + 'input,
                 {
-                    if let Some(simd_json::Node::Array($len, _)) = tape.next() {
+                    if let Some(simd_json::Node::Array{len: $len, ..}) = tape.next() {
                         Ok([
                             $(
                                 if $n >= 0 {

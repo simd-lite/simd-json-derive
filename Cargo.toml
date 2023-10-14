@@ -25,7 +25,7 @@ value-trait = "0.6"
 itoa = "1"
 ryu = "1"
 chrono = { version = "0.4", optional = true }
-simd-json = '0.11.0'
+simd-json = '0.12.0'
 
 [dev-dependencies]
 serde_json = "1"
@@ -38,13 +38,7 @@ rand = "0.8"
 default = ["impl-chrono"]
 impl-chrono = ["chrono"]
 128bit = ["simd-json-derive-int/128bit", "simd-json/128bit"]
-allow-non-simd = [
-    "simd-json-derive-int/allow-non-simd",
-    "simd-json/allow-non-simd",
-]
 
-[package.metadata.docs.rs]
-features = ["allow-non-simd"]
 
 [[example]]
 name = "enum1"

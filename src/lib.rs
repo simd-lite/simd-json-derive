@@ -1,4 +1,4 @@
-use simd_json::{AlignedBuf, Node};
+use simd_json::{Buffers, Node};
 pub use simd_json_derive_int::*;
 use std::collections;
 use std::io::{self, Write};
@@ -13,12 +13,19 @@ pub type Tape<'input> = Peekable<IntoIter<Node<'input>>>;
 pub fn __skip(n: usize, tape: &mut Peekable<IntoIter<Node>>) {
     for _ in 0..n {
         match tape.next() {
-            Some(Node::Array(elems, _)) => {
-                __skip(elems, tape);
+            Some(Node::Array { count, .. }) => {
+                for _ in 0..count {
+                    if tape.next().is_none() {
+                        return;
+                    }
+                }
             }
-            Some(Node::Object(elems, _)) => {
-                // we need to skip keys and values
-                __skip(elems * 2, tape);
+            Some(Node::Object { count, .. }) => {
+                for _ in 0..count {
+                    if tape.next().is_none() {
+                        return;
+                    }
+                }
             }
             Some(_) => {}
             None => return,
@@ -77,32 +84,14 @@ pub trait Deserialize<'input> {
     }
 
     #[inline]
-    fn from_slice_with_buffer(
-        json: &'input mut [u8],
-        string_buffer: &mut [u8],
-    ) -> simd_json::Result<Self>
-    where
-        Self: std::marker::Sized + 'input,
-    {
-        let tape =
-            simd_json::Deserializer::from_slice_with_buffer(json, string_buffer)?.into_tape();
-        let mut itr = tape.into_iter().peekable();
-        itr.next();
-        Self::from_tape(&mut itr)
-    }
-
-    #[inline]
     fn from_slice_with_buffers(
         json: &'input mut [u8],
-        input_buffer: &mut AlignedBuf,
-        string_buffer: &mut [u8],
+        buffers: &mut Buffers,
     ) -> simd_json::Result<Self>
     where
         Self: std::marker::Sized + 'input,
     {
-        let tape =
-            simd_json::Deserializer::from_slice_with_buffers(json, input_buffer, string_buffer)?
-                .into_tape();
+        let tape = simd_json::Deserializer::from_slice_with_buffers(json, buffers)?.into_tape();
         let mut itr = tape.into_iter().peekable();
         itr.next();
         Self::from_tape(&mut itr)

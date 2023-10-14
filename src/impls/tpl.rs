@@ -59,7 +59,7 @@ macro_rules! tuple_impls {
                 where
                     Self: std::marker::Sized + 'input,
                 {
-                    if let Some(simd_json::Node::Array($len, _)) = tape.next() {
+                    if let Some(simd_json::Node::Array{len: $len, ..}) = tape.next() {
                         Ok((
                             $($name::from_tape(tape)?,)+
                         ))
