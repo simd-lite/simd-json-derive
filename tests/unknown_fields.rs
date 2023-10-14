@@ -71,8 +71,7 @@ fn missing_required_fields() {
     assert!(res.is_err());
     let err = res.err().unwrap();
     assert!(
-        err.to_string()
-            .contains("missing fields: `snot`, `something`"),
+        err.to_string().contains("missing field: `snot`"),
         "Err: {} was wrong",
         err
     );
@@ -82,7 +81,7 @@ fn missing_required_fields() {
     assert!(res.is_err());
     let err = res.err().unwrap();
     assert!(
-        err.to_string().contains("missing fields: `something`"),
+        err.to_string().contains("missing field: `something`"),
         "Err: {} was wrong",
         err
     );

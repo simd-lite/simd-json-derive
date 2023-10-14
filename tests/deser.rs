@@ -157,3 +157,28 @@ fn enum_ser() {
         .unwrap();
     assert_eq!(r#"{"Res":{"Err":"snot"}}"#, e);
 }
+
+#[test]
+fn bar_string() {
+    #[derive(Deserialize)]
+    struct FooString {
+        bar: String,
+    }
+
+    let mut json = br#"{"bar":"baz"}"#.to_vec();
+    let res = FooString::from_slice(&mut json);
+    assert!(res.is_ok());
+    assert_eq!(res.unwrap().bar, "baz");
+}
+
+#[test]
+fn foo_str() {
+    #[derive(Deserialize)]
+    struct FooStr<'de> {
+        foo: &'de str,
+    }
+    let mut json = br#"{"foo":"bar"}"#.to_vec();
+    let res = FooStr::from_slice(&mut json);
+    assert!(res.is_ok());
+    assert_eq!(res.unwrap().foo, "bar");
+}
