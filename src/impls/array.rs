@@ -27,11 +27,9 @@ impl<'a, T, const N: usize> Drop for Guard<'a, T, N> {
 
         // SAFETY: this slice will contain only initialized objects.
         unsafe {
-            let slice = core::ptr::slice_from_raw_parts_mut(
-                self.array.as_mut_ptr() as *mut T,
-                self.initialized,
-            );
-            core::ptr::drop_in_place(slice);
+            let slice =
+                ptr::slice_from_raw_parts_mut(self.array.as_mut_ptr() as *mut T, self.initialized);
+            ptr::drop_in_place(slice);
         }
     }
 }

@@ -10,7 +10,8 @@ fn opt() {
         name: String,
     }
     let mut s = r#"{"Name": "snot", "logoName": "badger"}"#.to_string();
-    let de = unsafe { Ranme::from_str(s.as_mut_str()) }.expect("expected serialize with rename to work");
+    let de =
+        unsafe { Ranme::from_str(s.as_mut_str()) }.expect("expected serialize with rename to work");
     assert_eq!(
         Ranme {
             logo_name: Some("badger".to_string()),

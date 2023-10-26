@@ -96,7 +96,6 @@ pub trait Deserialize<'input> {
         Self::from_tape(&mut itr)
     }
 
-    // it's literally right below this idk what it's mad about
     #[inline]
     /// # Safety:
     ///
