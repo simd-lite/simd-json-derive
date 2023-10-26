@@ -20,7 +20,7 @@ members = ["simd-json-derive-int"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-simd-json-derive-int = { path = "./simd-json-derive-int", version = "0.12" }
+simd-json-derive-int = { path = "./simd-json-derive-int", version = "0.13" }
 value-trait = { version = "0.8" }
 itoa = "1"
 ryu = "1"
