@@ -5,7 +5,9 @@ impl Serialize for String {
     fn json_write<W>(&self, writer: &mut W) -> Result
     where
         W: Write,
-    { DummyGenerator(writer).write_string(self) }
+    {
+        DummyGenerator(writer).write_string(self)
+    }
 }
 
 impl<'input> Deserialize<'input> for String {
@@ -71,9 +73,7 @@ impl Serialize for str {
 // }
 
 impl<'input> Deserialize<'input> for Box<str> {
-    fn from_tape(
-        tape: &mut Tape<'input>,
-    ) -> simd_json::Result<Self>
+    fn from_tape(tape: &mut Tape<'input>) -> simd_json::Result<Self>
     where
         Self: Sized + 'input,
     {
@@ -85,4 +85,3 @@ impl<'input> Deserialize<'input> for Box<str> {
         }
     }
 }
-

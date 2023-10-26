@@ -5,8 +5,8 @@ impl Serialize for bool {
     #[inline]
     fn json_write<W: Write>(&self, writer: &mut W) -> Result {
         match *self {
-            true  => {writer.write_all(b"true" )}
-            false => {writer.write_all(b"false")}
+            true => writer.write_all(b"true"),
+            false => writer.write_all(b"false"),
         }
     }
 }
