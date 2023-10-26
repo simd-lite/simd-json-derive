@@ -78,8 +78,7 @@ pub trait Deserialize<'input> {
         Self: std::marker::Sized + 'input,
     {
         let tape = simd_json::to_tape(json)?;
-        let mut itr = tape.into_iter().peekable();
-        itr.next();
+        let mut itr = tape.0.into_iter().peekable();
         Self::from_tape(&mut itr)
     }
 
@@ -92,8 +91,7 @@ pub trait Deserialize<'input> {
         Self: std::marker::Sized + 'input,
     {
         let tape = simd_json::Deserializer::from_slice_with_buffers(json, buffers)?.into_tape();
-        let mut itr = tape.into_iter().peekable();
-        itr.next();
+        let mut itr = tape.0.into_iter().peekable();
         Self::from_tape(&mut itr)
     }
 

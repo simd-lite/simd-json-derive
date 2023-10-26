@@ -21,11 +21,11 @@ members = ["simd-json-derive-int"]
 
 [dependencies]
 simd-json-derive-int = { path = "./simd-json-derive-int", version = "0.12" }
-value-trait = "0.6"
+value-trait = { version = "0.8" }
 itoa = "1"
 ryu = "1"
 chrono = { version = "0.4", optional = true }
-simd-json = '0.12.0'
+simd-json = { version = "0.13.0" }
 
 [dev-dependencies]
 serde_json = "1"
@@ -42,6 +42,9 @@ impl-chrono = ["chrono"]
 
 [[example]]
 name = "enum1"
+
+[[example]]
+name = "untagged"
 
 [[bench]]
 name = "value"
