@@ -1,6 +1,6 @@
 use crate::{Deserialize, Serialize};
 use simd_json::{BorrowedValue, Node, OwnedValue};
-use value_trait::{Builder, Writable};
+use value_trait::{base::Writable, ValueBuilder};
 
 impl Serialize for OwnedValue {
     fn json_write<W>(&self, writer: &mut W) -> crate::Result
