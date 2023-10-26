@@ -105,5 +105,7 @@ fn tpl_array() {
     println!("{}", b.json_string().unwrap());
     let mut s = r#"{"tpl":[1,2],"array":[3,4]}"#.to_string();
     assert_eq!(s, b.json_string().unwrap());
-    unsafe { assert_eq!(b, Bla::from_str(s.as_mut_str()).unwrap()); }
+    unsafe {
+        assert_eq!(b, Bla::from_str(s.as_mut_str()).unwrap());
+    }
 }

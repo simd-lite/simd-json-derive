@@ -95,8 +95,6 @@ pub trait Deserialize<'input> {
         Self::from_tape(&mut itr)
     }
 
-
-    #[allow(clippy::missing_safety_doc)]// it's literally right below this idk what it's mad about
     #[inline]
     /// # Safety:
     ///
@@ -108,11 +106,6 @@ pub trait Deserialize<'input> {
     {
         Self::from_slice(json.as_bytes_mut())
     }
-
-    fn from_string(mut json: String) -> simd_json::Result<Self>
-    where
-        Self: Sized + 'input + for<'de> Deserialize<'de>,
-    { unsafe { Self::from_slice(json.as_bytes_mut()) } }
 }
 
 pub(crate) struct DummyGenerator<W: Write>(W);

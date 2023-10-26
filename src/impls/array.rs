@@ -1,11 +1,10 @@
-use std::mem::{MaybeUninit};
-use std::ptr;
 use crate::*;
+use std::mem::MaybeUninit;
+use std::ptr;
 // Taken from https://docs.serde.rs/src/serde/ser/impls.rs.html#378
 
-
 struct Guard<'a, T, const N: usize> {
-    pub array: &'a mut [MaybeUninit<T>; N],// we include size for a small optimization of pointer size
+    pub array: &'a mut [MaybeUninit<T>; N], // we include size for a small optimization of pointer size
     pub initialized: usize,
 }
 
@@ -17,7 +16,7 @@ impl<'a, T, const N: usize> Guard<'a, T, N> {
         // and slots will not be initialized more than once.
         unsafe {
             self.array.get_unchecked_mut(self.initialized).write(item);
-            self.initialized = self.initialized.wrapping_add(1);// unchecked_add is unstable
+            self.initialized = self.initialized.wrapping_add(1); // unchecked_add is unstable
         }
     }
 }
@@ -28,40 +27,42 @@ impl<'a, T, const N: usize> Drop for Guard<'a, T, N> {
 
         // SAFETY: this slice will contain only initialized objects.
         unsafe {
-            let slice = core::ptr::slice_from_raw_parts_mut(
-                self.array.as_mut_ptr() as *mut T, self.initialized
-            );
-            core::ptr::drop_in_place(slice);
+            let slice =
+                ptr::slice_from_raw_parts_mut(self.array.as_mut_ptr() as *mut T, self.initialized);
+            ptr::drop_in_place(slice);
         }
     }
 }
 
 impl<'input, T, const N: usize> Deserialize<'input> for [T; N]
-    where
-        T: Deserialize<'input>,
+where
+    T: Deserialize<'input>,
 {
     #[inline]
     fn from_tape(tape: &mut Tape<'input>) -> simd_json::Result<Self>
-        where
-            Self: Sized + 'input,
+    where
+        Self: Sized + 'input,
     {
-        if let Some(simd_json::Node::Array(n, _)) = tape.next(){
+        if let Some(simd_json::Node::Array(n, _)) = tape.next() {
             if n != N {
                 return Err(simd_json::Error::generic(simd_json::ErrorType::Serde(
-                    format!("expected array of len {N} found array of len {n}")
-                )))
+                    format!("expected array of len {N} found array of len {n}"),
+                )));
             }
 
             if N == 0 {
                 // Safety: N is 0, and so *const [T; N] is *const [T; 0]
-                return Ok(unsafe { ptr::read((&[]) as *const [T; N]) })
+                return Ok(unsafe { ptr::read((&[]) as *const [T; N]) });
             }
 
             // Safety: elements are still MaybeUninit
             let mut array: [MaybeUninit<T>; N] = unsafe { MaybeUninit::uninit().assume_init() };
 
             // Guard is here to make sure we drop
-            let mut guard = Guard { array: &mut array, initialized: 0 };
+            let mut guard = Guard {
+                array: &mut array,
+                initialized: 0,
+            };
             while guard.initialized < N {
                 let item = T::from_tape(tape)?;
 
@@ -81,17 +82,18 @@ impl<'input, T, const N: usize> Deserialize<'input> for [T; N]
 }
 
 impl<T, const N: usize> Serialize for [T; N]
-    where
-        T: Serialize,
+where
+    T: Serialize,
 {
     #[inline]
     fn json_write<W>(&self, writer: &mut W) -> io::Result<()>
-        where
-            W: Write,
+    where
+        W: Write,
     {
         // N is a compile time constant, this wont be checked at runtime
-        if N == 0 { return writer.write_all(b"[]") }
-
+        if N == 0 {
+            return writer.write_all(b"[]");
+        }
 
         let mut i = self.iter();
         if let Some(first) = i.next() {

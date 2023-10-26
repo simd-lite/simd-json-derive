@@ -3,9 +3,9 @@ use std::ops::Range;
 #[cfg(feature = "heap-array")]
 use heap_array::HeapArray;
 
-use collections::HashMap;
-use collections::BTreeMap;
 use crate::*;
+use collections::BTreeMap;
+use collections::HashMap;
 
 macro_rules! vec_like {
     ($t:ty) => {
@@ -239,11 +239,6 @@ macro_rules! ser_map_like {
         }
     };
 }
-macro_rules! de_map_like {
-    ($name:ident <$($generic:ident: $constraint:tt),*>) => {
-
-    };
-}
 
 ser_map_like!(HashMap<K: SerializeAsKey, V: Serialize, H: (std::hash::BuildHasher)>);
 ser_map_like!(BTreeMap<K: SerializeAsKey, V: Serialize>);
@@ -360,7 +355,10 @@ vec_like!(HeapArray<T>);
 
 #[cfg(feature = "heap-array")]
 impl<'input, T: Deserialize<'input>> Deserialize<'input> for HeapArray<T> {
-    fn from_tape(tape: &mut Tape<'input>) -> simd_json::Result<Self> where Self: Sized + 'input {
+    fn from_tape(tape: &mut Tape<'input>) -> simd_json::Result<Self>
+    where
+        Self: Sized + 'input,
+    {
         if let Some(simd_json::Node::Array(size, _)) = tape.next() {
             HeapArray::try_from_fn(size, |_| T::from_tape(tape))
         } else {

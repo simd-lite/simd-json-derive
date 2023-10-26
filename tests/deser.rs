@@ -84,13 +84,19 @@ fn opt() {
     );
 
     let mut s = String::from(r#"{"logo": "badger"}"#);
-    unsafe { assert!(Bla::from_str(s.as_mut_str()).is_err()); }
+    unsafe {
+        assert!(Bla::from_str(s.as_mut_str()).is_err());
+    }
 
     let mut s = String::from(r#"{}"#);
-    unsafe { assert!(Bla::from_str(s.as_mut_str()).is_err()); }
+    unsafe {
+        assert!(Bla::from_str(s.as_mut_str()).is_err());
+    }
 
     let mut s = String::from(r#"{"name":"snot", "logo": 42}"#);
-    unsafe { assert!(Bla::from_str(s.as_mut_str()).is_err()); }
+    unsafe {
+        assert!(Bla::from_str(s.as_mut_str()).is_err());
+    }
 
     let mut s = String::from(r#"{"name":"snot", "logo": "badger", "snot":42}"#);
     unsafe {
