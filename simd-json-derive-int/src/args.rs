@@ -1,24 +1,38 @@
 use proc_macro2::{Ident, Literal};
 use simd_json::prelude::*;
-use syn::parse::{Parse, ParseStream};
+use simd_json::OwnedValue;
+use syn::{
+    parse::{Parse, ParseStream},
+    LitStr, Path,
+};
 use syn::{Attribute, Field, Token};
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub(crate) struct FieldAttrs {
     rename: Option<String>,
+    skip_serializing_if: Option<Path>,
 }
 
 impl Parse for FieldAttrs {
     fn parse(input: ParseStream) -> syn::Result<Self> {
-        let mut rename = None;
+        let mut attrs = FieldAttrs::default();
+
         while !input.is_empty() {
             let attr: Ident = input.parse()?;
             match attr.to_string().as_str() {
                 "rename" => {
                     let _eqal_token: Token![=] = input.parse()?;
-                    let name: Literal = input.parse()?;
+                    let name: LitStr = input.parse()?;
 
-                    rename = Some(name.to_string().trim_matches('"').to_string());
+                    attrs.rename = Some(name.value());
+                }
+                "skip_serializing_if" => {
+                    let _eqal_token: Token![=] = input.parse()?;
+                    let function: LitStr = input.parse()?;
+
+                    let path: Path = function.parse()?;
+
+                    attrs.skip_serializing_if = Some(path);
                 }
                 "borrow" => (),
                 other => {
@@ -32,7 +46,7 @@ impl Parse for FieldAttrs {
                 let _comma_token: Token![,] = input.parse()?;
             }
         }
-        Ok(FieldAttrs { rename })
+        Ok(attrs)
     }
 }
 
@@ -40,6 +54,7 @@ impl Parse for FieldAttrs {
 pub(crate) enum RenameAll {
     None,
     CamelCase,
+    Lowercase,
 }
 
 fn capitalize(field: &str) -> String {
@@ -54,6 +69,7 @@ impl RenameAll {
     fn apply(&self, field: &str) -> String {
         match self {
             RenameAll::None => String::from(field),
+            RenameAll::Lowercase => field.to_lowercase(),
             RenameAll::CamelCase => {
                 let mut parts = field.split('_');
                 let first = parts.next().expect("zero length name");
@@ -94,6 +110,7 @@ impl Parse for StructAttrs {
 
                     match name.to_string().as_str() {
                         r#""camelCase""# => rename_all = RenameAll::CamelCase,
+                        r#""lowercase""# => rename_all = RenameAll::Lowercase,
                         other => {
                             return Err(syn::Error::new(
                                 attr.span(),
@@ -147,24 +164,30 @@ impl StructAttrs {
         self.deny_unknown_fields
     }
 
-    pub(crate) fn name(&self, field: &Field) -> Option<String> {
+    pub(crate) fn skip_serializing_if(&self, field: &Field) -> Option<Path> {
+        get_attr(&field.attrs, "simd_json")
+            .or_else(|| get_attr(&field.attrs, "serde"))
+            .map(field_attrs)
+            .and_then(|a| a.skip_serializing_if)
+    }
+    pub(crate) fn name(&self, field: &Field) -> String {
         if let Some(attr) = get_attr(&field.attrs, "simd_json")
             .map(field_attrs)
             .and_then(|a| a.rename)
         {
-            Some(format!("{}:", simd_json::OwnedValue::from(attr).encode()))
+            format!("{}:", OwnedValue::from(attr).encode())
         } else if let Some(attr) = get_attr(&field.attrs, "serde")
             .map(field_attrs)
             .and_then(|a| a.rename)
         {
-            Some(format!("{}:", simd_json::OwnedValue::from(attr).encode()))
+            format!("{}:", OwnedValue::from(attr).encode())
         } else {
-            field.ident.as_ref().map(|ident| {
-                format!(
-                    "{}:",
-                    simd_json::OwnedValue::from(self.rename_all.apply(&ident.to_string())).encode()
-                )
-            })
+            let f = field
+                .ident
+                .as_ref()
+                .expect("Field is missing ident")
+                .to_string();
+            format!("{}:", OwnedValue::from(self.rename_all.apply(&f)).encode())
         }
     }
 }

@@ -46,12 +46,12 @@ where
         Self: Sized + 'input,
     {
         match tape.next() {
-            Some(simd_json::Node::Array(size, _)) => {
-                let mut res = Vec::with_capacity(size);
+            Some(simd_json::Node::Array { len, .. }) => {
+                let mut res = Vec::with_capacity(len);
                 #[allow(clippy::uninit_vec)]
                 unsafe {
-                    res.set_len(size);
-                    for i in 0..size {
+                    res.set_len(len);
+                    for i in 0..len {
                         match T::from_tape(tape) {
                             Ok(t) => std::ptr::write(res.get_unchecked_mut(i), t),
                             Err(e) => {
@@ -81,9 +81,9 @@ where
     where
         Self: Sized + 'input,
     {
-        if let Some(simd_json::Node::Array(size, _)) = tape.next() {
+        if let Some(simd_json::Node::Array { len, .. }) = tape.next() {
             let mut v = collections::VecDeque::new();
-            for _ in 0..size {
+            for _ in 0..len {
                 v.push_back(T::from_tape(tape)?)
             }
             Ok(v)
@@ -104,9 +104,9 @@ where
     where
         Self: Sized + 'input,
     {
-        if let Some(simd_json::Node::Array(size, _)) = tape.next() {
+        if let Some(simd_json::Node::Array { len, .. }) = tape.next() {
             let mut v = collections::BinaryHeap::new();
-            for _ in 0..size {
+            for _ in 0..len {
                 v.push(T::from_tape(tape)?)
             }
             Ok(v)
@@ -127,9 +127,9 @@ where
     where
         Self: Sized + 'input,
     {
-        if let Some(simd_json::Node::Array(size, _)) = tape.next() {
+        if let Some(simd_json::Node::Array { len, .. }) = tape.next() {
             let mut v = collections::BTreeSet::new();
-            for _ in 0..size {
+            for _ in 0..len {
                 v.insert(T::from_tape(tape)?);
             }
             Ok(v)
@@ -150,9 +150,9 @@ where
     where
         Self: Sized + 'input,
     {
-        if let Some(simd_json::Node::Array(size, _)) = tape.next() {
+        if let Some(simd_json::Node::Array { len, .. }) = tape.next() {
             let mut v = collections::LinkedList::new();
-            for _ in 0..size {
+            for _ in 0..len {
                 v.push_back(T::from_tape(tape)?);
             }
             Ok(v)
@@ -197,9 +197,9 @@ where
     where
         Self: Sized + 'input,
     {
-        if let Some(simd_json::Node::Array(size, _)) = tape.next() {
-            let mut v = collections::HashSet::with_capacity_and_hasher(size, H::default());
-            for _ in 0..size {
+        if let Some(simd_json::Node::Array { len, .. }) = tape.next() {
+            let mut v = collections::HashSet::with_capacity_and_hasher(len, H::default());
+            for _ in 0..len {
                 v.insert(T::from_tape(tape)?);
             }
             Ok(v)
@@ -254,9 +254,9 @@ where
     where
         Self: Sized + 'input,
     {
-        if let Some(simd_json::Node::Object(size, _)) = tape.next() {
-            let mut v = HashMap::with_capacity_and_hasher(size, H::default());
-            for _ in 0..size {
+        if let Some(simd_json::Node::Object { len, .. }) = tape.next() {
+            let mut v = collections::HashMap::with_capacity_and_hasher(len, H::default());
+            for _ in 0..len {
                 let k = K::from_tape(tape)?;
                 v.insert(k, V::from_tape(tape)?);
             }
@@ -277,9 +277,9 @@ where
     where
         Self: Sized + 'input,
     {
-        if let Some(simd_json::Node::Object(size, _)) = tape.next() {
-            let mut v = BTreeMap::new();
-            for _ in 0..size {
+        if let Some(simd_json::Node::Object { len, .. }) = tape.next() {
+            let mut v = collections::BTreeMap::new();
+            for _ in 0..len {
                 let k = K::from_tape(tape)?;
                 v.insert(k, V::from_tape(tape)?);
             }
@@ -316,7 +316,7 @@ where
     where
         Self: Sized + 'input,
     {
-        if let Some(simd_json::Node::Object(2, _)) = tape.next() {
+        if let Some(simd_json::Node::Object { len: 2, .. }) = tape.next() {
             match tape.next() {
                 Some(simd_json::Node::String("start")) => {
                     let start = Deserialize::from_tape(tape)?;

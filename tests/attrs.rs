@@ -30,7 +30,7 @@ fn rename() {
 }
 
 #[test]
-fn rename_all() {
+fn rename_all_camelcase() {
     #[derive(simd_json_derive::Serialize)]
     #[serde(rename_all = "camelCase")]
     struct Bla {

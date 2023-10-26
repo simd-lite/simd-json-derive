@@ -10,7 +10,30 @@ use value_trait::generator::BaseGenerator;
 mod impls;
 pub type Result = io::Result<()>;
 
-pub type Tape<'input> = Peekable<IntoIter<simd_json::Node<'input>>>;
+pub type Tape<'input> = Peekable<IntoIter<Node<'input>>>;
+
+pub fn __skip(n: usize, tape: &mut Peekable<IntoIter<Node>>) {
+    for _ in 0..n {
+        match tape.next() {
+            Some(Node::Array { count, .. }) => {
+                for _ in 0..count {
+                    if tape.next().is_none() {
+                        return;
+                    }
+                }
+            }
+            Some(Node::Object { count, .. }) => {
+                for _ in 0..count {
+                    if tape.next().is_none() {
+                        return;
+                    }
+                }
+            }
+            Some(_) => {}
+            None => return,
+        }
+    }
+}
 
 pub trait Serialize {
     fn json_write<W>(&self, writer: &mut W) -> Result
@@ -81,17 +104,13 @@ pub trait Deserialize<'input> {
     #[inline]
     fn from_slice_with_buffers(
         json: &'input mut [u8],
-        input_buffer: &mut AlignedBuf,
-        string_buffer: &mut [u8],
+        buffers: &mut Buffers,
     ) -> simd_json::Result<Self>
     where
         Self: Sized + 'input,
     {
-        let tape =
-            simd_json::Deserializer::from_slice_with_buffers(json, input_buffer, string_buffer)?
-                .into_tape();
-        let mut itr = tape.into_iter().peekable();
-        itr.next();
+        let tape = simd_json::Deserializer::from_slice_with_buffers(json, buffers)?.into_tape();
+        let mut itr = tape.0.into_iter().peekable();
         Self::from_tape(&mut itr)
     }
 

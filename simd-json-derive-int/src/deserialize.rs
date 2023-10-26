@@ -17,14 +17,14 @@ fn derive_named_struct(
     generics: Generics,
     fields: Punctuated<Field, Comma>,
 ) -> proc_macro::TokenStream {
-    let mut keys = Vec::new();
+    let mut value_keys = Vec::new();
+    let mut value_locals = Vec::new();
     let mut values = Vec::new();
-    let mut getters = Vec::new();
+
     let mut options = Vec::new();
-    let mut ids = Vec::new();
-    let mut opt_ids = Vec::new();
-    let mut id: u64 = 0;
-    let mut all_needed: u64 = 0;
+    let mut option_locals = Vec::new();
+    let mut option_keys = Vec::new();
+
     let deny_unknown_fields: bool = attrs.deny_unknown_fields();
     let params = &generics.params;
     let (all_generics, derive_lt) = match params.first() {
@@ -32,7 +32,7 @@ fn derive_named_struct(
         Some(GenericParam::Lifetime(lifetime)) => (quote! { <#params> }, quote! { #lifetime }),
         Some(_) => (quote! { <'input, #params> }, quote! { 'input }),
     };
-    for f in &fields {
+    for (id, f) in fields.iter().enumerate() {
         let mut is_option = false;
         if let Type::Path(TypePath {
             path: Path { segments, .. },
@@ -44,24 +44,17 @@ fn derive_named_struct(
             }
         }
 
-        if let Some((name, ident)) = attrs
-            .name(f)
-            .and_then(|name| Some((name, f.ident.as_ref()?.clone())))
-        {
-            let name = name.trim_matches(':').trim_matches('"').to_string();
-            let bit = 1 << id;
-            id += 1;
-            if is_option {
-                options.push(ident.clone());
-                opt_ids.push(bit);
-                getters.push(quote! { #ident.and_then(::std::convert::identity) })
-            } else {
-                all_needed |= bit;
-                getters.push(quote! { #ident.expect(concat!("failed to get field ", #name))  })
-            }
-            keys.push(name);
+        let ident = f.ident.clone().expect("Missing ident");
+        let name = attrs.name(f);
+        let name = name.trim_matches(':').trim_matches('"').to_string();
+        if is_option {
+            options.push(ident.clone());
+            option_locals.push(format_ident!("__option_{}", id));
+            option_keys.push(name);
+        } else {
             values.push(ident);
-            ids.push(bit);
+            value_locals.push(format_ident!("__value_{}", id));
+            value_keys.push(name);
         }
     }
 
@@ -74,93 +67,52 @@ fn derive_named_struct(
             where
                 Self: std::marker::Sized + #derive_lt
             {
-                let __deser_size: usize = if let Some(::simd_json::Node::Object(size, _)) = __deser_tape.next() {
-                    size
+                use ::serde::de::Error;
+                let __deser_len: usize = if let Some(::simd_json::Node::Object{len, ..}) = __deser_tape.next() {
+                    len
                 } else {
                     return Err(::simd_json::Error::generic(::simd_json::ErrorType::ExpectedMap));
                 };
-                let mut __seen: u64 = 0;
-                let mut __err: Option<::simd_json::Error> = None;
-                let mut __res: Self = unsafe{::std::mem::MaybeUninit::uninit().assume_init()};
 
-                for _ in 0..__deser_size {
+                #(let mut #value_locals = None;)*
+                #(let mut #option_locals = None;)*
+
+                for _ in 0..__deser_len {
                     match __deser_tape.next() {
                         Some(::simd_json::Node::String(__deser_key)) =>  {
                             match __deser_key {
                                 #(
-                                #keys => {
-                                    match ::simd_json_derive::Deserialize::from_tape(__deser_tape) {
-                                        Ok(v) => unsafe {
-                                            __seen |= #ids;
-                                            ::std::ptr::write(&mut __res.#values, v);
-                                        }
-                                        Err(e) => {
-                                            __err = Some(e);
-                                            break
-                                        }
-                                    }
-
-                                },
+                                #value_keys => {
+                                    let v = ::simd_json_derive::Deserialize::from_tape(__deser_tape)?;
+                                    #value_locals = Some(v);
+                                }
+                                )*
+                                #(
+                                #option_keys => {
+                                    #option_locals = ::simd_json_derive::Deserialize::from_tape(__deser_tape)?;
+                                }
                                 )*
                                 __unknown_field if #deny_unknown_fields => {
-                                    use ::serde::de::Error;
-                                    __err = Some(::simd_json::Error::unknown_field(__unknown_field, &[ #(#keys),* ]));
-                                    break
+                                    return Err(::simd_json::Error::unknown_field(__unknown_field, &[ #(#value_keys,)* #(#option_keys,)* ]));
                                 }
                                 _ => {
                                     // ignore unknown field
+                                    ::simd_json_derive::__skip(1, __deser_tape)
                                 }
                             }
                         },
-                        _ => {
-                            unreachable!()
-                        }
+                        // There are no more elements
+                        _ => break
                     }
                 }
-                if (__seen & #all_needed) != #all_needed && __err.is_none() {
-
-                    use ::serde::de::Error;
-                    // extract the missing field names
-                    let mut __missing_field_ids: u64 = (__seen ^ #all_needed);
-                    let mut __missing_fields: Vec<&'static str> = Vec::with_capacity(__missing_field_ids.count_ones() as usize);
-                    while __missing_field_ids != 0 {
+                Ok(#ident {
                         #(
-                            if #ids & __missing_field_ids == #ids {
-                                __missing_fields.push(#keys);
-                                __missing_field_ids ^= #ids; // clear out the bit
-                            }
+                            #options: #option_locals,
                         )*
-                    }
-                    __err = Some(::simd_json::Error::custom(format!("{}: `{}`", "missing fields", __missing_fields.join("`, `"))));
-                }
-
-                if let Some(e) = __err {
-                    unsafe{
-                        let #ident {
-                            #(
-                                #values,
-                            )*
-                        } = __res;
                         #(
-                        if #ids & __seen == 0 {
-                            #[allow(clippy::forget_ref)]
-                            ::std::mem::forget(#values);
-                        };
+                            #values: #value_locals.ok_or_else(|| ::simd_json::Error::custom(format!("missing field: `{}`", #value_keys)))?,
                         )*
-                    }
-                    Err(e)
-                } else {
-                    unsafe {
-                        #(
-                        if #opt_ids & __seen == 0 {
-                            ::std::ptr::write(&mut __res.#options, None);
-                        };
-                        )*
-                    }
-                    Ok( __res )
-                }
-
-
+                })
             }
         }
     };
@@ -278,7 +230,7 @@ fn derive_enum(
         #(
             Some(::simd_json::Node::String(#unnamed_values)) => {
                 match __deser_tape.next() {
-                  Some(::simd_json::Node::Array(#unnamed_len, _)) => Ok(#ident::#unnamed_keys(#unnamed_fields)),
+                  Some(::simd_json::Node::Array{len: #unnamed_len, ..}) => Ok(#ident::#unnamed_keys(#unnamed_fields)),
                   _ => Err(::simd_json::Error::generic(::simd_json::ErrorType::ExpectedArray))   // FIXME
                 }
 
@@ -314,7 +266,7 @@ fn derive_enum(
             {
                 match __deser_tape.next() {
                     #simple
-                    Some(::simd_json::Node::Object(1, _)) => {
+                    Some(::simd_json::Node::Object{len: 1, ..}) => {
                         match __deser_tape.next() {
                             #unnamed1
                             #unnamed
