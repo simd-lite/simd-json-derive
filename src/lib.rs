@@ -35,8 +35,8 @@ pub fn __skip(n: usize, tape: &mut Tape) {
 
 pub trait Serialize {
     fn json_write<W>(&self, writer: &mut W) -> Result
-        where
-            W: Write;
+    where
+        W: Write;
 
     #[inline]
     fn json_vec(&self) -> io::Result<Vec<u8>> {
@@ -53,14 +53,14 @@ pub trait Serialize {
 
 pub trait SerializeAsKey {
     fn json_write<W>(&self, writer: &mut W) -> Result
-        where
-            W: Write;
+    where
+        W: Write;
 }
 impl<T: AsRef<str>> SerializeAsKey for T {
     #[inline]
     fn json_write<W>(&self, writer: &mut W) -> Result
-        where
-            W: Write,
+    where
+        W: Write,
     {
         let s: &str = self.as_ref();
         s.json_write(writer)
@@ -69,13 +69,13 @@ impl<T: AsRef<str>> SerializeAsKey for T {
 
 pub trait Deserialize<'input> {
     fn from_tape(tape: &mut Tape<'input>) -> simd_json::Result<Self>
-        where
-            Self: Sized + 'input;
+    where
+        Self: Sized + 'input;
 
     #[inline]
     fn from_slice(json: &'input mut [u8]) -> simd_json::Result<Self>
-        where
-            Self: Sized + 'input,
+    where
+        Self: Sized + 'input,
     {
         let tape = simd_json::to_tape(json)?;
         let mut itr = tape.0.into_iter().peekable();
@@ -87,8 +87,8 @@ pub trait Deserialize<'input> {
         json: &'input mut [u8],
         buffers: &mut Buffers,
     ) -> simd_json::Result<Self>
-        where
-            Self: Sized + 'input,
+    where
+        Self: Sized + 'input,
     {
         let tape = simd_json::Deserializer::from_slice_with_buffers(json, buffers)?.into_tape();
         let mut itr = tape.0.into_iter().peekable();
@@ -97,8 +97,8 @@ pub trait Deserialize<'input> {
 
     #[inline]
     fn from_str(json: &'input mut str) -> simd_json::Result<Self>
-        where
-            Self: Sized + 'input,
+    where
+        Self: Sized + 'input,
     {
         unsafe { Self::from_slice(json.as_bytes_mut()) }
     }
