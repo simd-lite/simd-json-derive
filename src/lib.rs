@@ -10,7 +10,7 @@ pub type Result = io::Result<()>;
 
 pub type Tape<'input> = Peekable<IntoIter<Node<'input>>>;
 
-pub fn __skip(n: usize, tape: &mut Peekable<IntoIter<Node>>) {
+pub fn __skip(n: usize, tape: &mut Tape) {
     for _ in 0..n {
         match tape.next() {
             Some(Node::Array { count, .. }) => {
@@ -56,7 +56,6 @@ pub trait SerializeAsKey {
     where
         W: Write;
 }
-
 impl<T: AsRef<str>> SerializeAsKey for T {
     #[inline]
     fn json_write<W>(&self, writer: &mut W) -> Result
@@ -97,27 +96,23 @@ pub trait Deserialize<'input> {
     }
 
     #[inline]
-    /// # Safety:
-    ///
-    /// user must not use the string afterwards
-    /// as it most likely will no longer contain valid utf-8
-    unsafe fn from_str(json: &'input mut str) -> simd_json::Result<Self>
+    fn from_str(json: &'input mut str) -> simd_json::Result<Self>
     where
         Self: Sized + 'input,
     {
-        Self::from_slice(json.as_bytes_mut())
+        unsafe { Self::from_slice(json.as_bytes_mut()) }
     }
 }
 
-pub(crate) struct DummyGenerator<W: Write>(W);
+struct DummyGenerator<W: Write>(W);
 impl<W: Write> BaseGenerator for DummyGenerator<W> {
     type T = W;
     #[inline]
     fn get_writer(&mut self) -> &mut <Self as BaseGenerator>::T {
         &mut self.0
     }
-    #[inline(always)]
-    fn write_min(&mut self, _: &[u8], b: u8) -> io::Result<()> {
-        self.0.write_all(&[b])
+    #[inline]
+    fn write_min(&mut self, _: &[u8], _: u8) -> io::Result<()> {
+        unimplemented!()
     }
 }
