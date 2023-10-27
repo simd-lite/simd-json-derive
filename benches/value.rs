@@ -21,7 +21,7 @@ fn deserialize_owned_value_benchmark(c: &mut Criterion) {
         group.throughput(Throughput::Bytes(input.len() as u64));
         group.bench_with_input(BenchmarkId::from_parameter(i), &input, |b, input| {
             let mut my_input = input.clone();
-            b.iter(|| OwnedValue::from_str(my_input.as_mut_str()).expect("shizzle"))
+            b.iter(|| unsafe { OwnedValue::from_str(my_input.as_mut_str()).expect("shizzle") })
         });
     }
     group.finish();
@@ -35,7 +35,8 @@ fn deserialize_borrowed_value_benchmark(c: &mut Criterion) {
         group.bench_with_input(BenchmarkId::from_parameter(i), &input, |b, input| {
             let mut my_input = input.clone();
             b.iter(|| {
-                let _x = BorrowedValue::from_str(my_input.as_mut_str()).expect("shizzle");
+                let _x =
+                    unsafe { BorrowedValue::from_str(my_input.as_mut_str()).expect("shizzle") };
             })
         });
     }

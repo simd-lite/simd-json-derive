@@ -96,11 +96,15 @@ pub trait Deserialize<'input> {
     }
 
     #[inline]
-    fn from_str(json: &'input mut str) -> simd_json::Result<Self>
+    /// # Safety
+    ///
+    /// user must not use the string afterwards
+    /// as it most likely will no longer contain valid utf-8
+    unsafe fn from_str(json: &'input mut str) -> simd_json::Result<Self>
     where
         Self: Sized + 'input,
     {
-        unsafe { Self::from_slice(json.as_bytes_mut()) }
+        Self::from_slice(json.as_bytes_mut())
     }
 }
 

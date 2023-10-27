@@ -359,8 +359,8 @@ impl<'input, T: Deserialize<'input>> Deserialize<'input> for HeapArray<T> {
     where
         Self: Sized + 'input,
     {
-        if let Some(simd_json::Node::Array(size, _)) = tape.next() {
-            HeapArray::try_from_fn(size, |_| T::from_tape(tape))
+        if let Some(simd_json::Node::Array { len, .. }) = tape.next() {
+            HeapArray::try_from_fn(len, |_| T::from_tape(tape))
         } else {
             Err(simd_json::Error::generic(
                 simd_json::ErrorType::ExpectedArray,
