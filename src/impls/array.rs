@@ -43,7 +43,7 @@ where
     where
         Self: Sized + 'input,
     {
-        if let Some(Node::Array { len, ..}) = tape.next() {
+        if let Some(Node::Array { len, .. }) = tape.next() {
             if len != N {
                 return Err(simd_json::Error::generic(simd_json::ErrorType::Serde(
                     format!("expected array of len {N} found array of len {len}"),
