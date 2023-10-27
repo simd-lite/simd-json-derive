@@ -1,8 +1,8 @@
 use crate::*;
 use std::mem::MaybeUninit;
 use std::ptr;
-// Taken from https://docs.serde.rs/src/serde/ser/impls.rs.html#378
 
+// taken from https://github.com/rust-lang/rust/blob/95f6a01e8f8fb121ded7d0eaa86906437cb08652/library/core/src/array/mod.rs#L843
 struct Guard<'a, T, const N: usize> {
     pub array: &'a mut [MaybeUninit<T>; N], // we include size for a small optimization of pointer size
     pub initialized: usize,
@@ -43,8 +43,8 @@ where
     where
         Self: Sized + 'input,
     {
-        if let Some(simd_json::Node::Array { len, .. }) = tape.next() {
-            if len != N {
+        if let Some(Node::Array { len: n, count: _ }) = tape.next() {
+            if n != N {
                 return Err(simd_json::Error::generic(simd_json::ErrorType::Serde(
                     format!("expected array of len {N} found array of len {len}"),
                 )));
@@ -63,6 +63,8 @@ where
                 array: &mut array,
                 initialized: 0,
             };
+
+            // taken from https://github.com/rust-lang/rust/blob/95f6a01e8f8fb121ded7d0eaa86906437cb08652/library/core/src/array/mod.rs#L812
             while guard.initialized < N {
                 let item = T::from_tape(tape)?;
 
