@@ -33,7 +33,6 @@ impl<'input, 'tape> OwnedDeser<'input, 'tape> {
         }
     }
     #[inline(always)]
-    #[allow(clippy::uninit_vec)]
     fn parse_array(&mut self, len: usize) -> OwnedValue {
         let mut res: Vec<OwnedValue> = Vec::with_capacity(len);
         // Rust doesn't optimize the normal loop away here
@@ -41,10 +40,10 @@ impl<'input, 'tape> OwnedDeser<'input, 'tape> {
         // checks during push
 
         unsafe {
-            res.set_len(len);
             for i in 0..len {
                 std::ptr::write(res.get_unchecked_mut(i), self.parse().unwrap());
             }
+            res.set_len(len);
         }
         OwnedValue::Array(res)
     }
@@ -90,7 +89,6 @@ impl<'input, 'tape> BorrowedDeser<'input, 'tape> {
         }
     }
     #[inline(always)]
-    #[allow(clippy::uninit_vec)]
     fn parse_array(&mut self, len: usize) -> BorrowedValue<'input> {
         let mut res = Vec::with_capacity(len);
 
@@ -98,10 +96,10 @@ impl<'input, 'tape> BorrowedDeser<'input, 'tape> {
         // so we write our own avoiding the length
         // checks during push
         unsafe {
-            res.set_len(len);
             for i in 0..len {
                 std::ptr::write(res.get_unchecked_mut(i), self.parse().unwrap());
             }
+            res.set_len(len);
         }
         BorrowedValue::Array(res)
     }
