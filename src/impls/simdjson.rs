@@ -23,13 +23,13 @@ struct OwnedDeser<'input, 'tape>(&'tape mut crate::Tape<'input>);
 
 impl<'input, 'tape> OwnedDeser<'input, 'tape> {
     #[inline(always)]
-    fn parse(&mut self) -> simd_json::Result<OwnedValue> {
+    fn parse(&mut self) -> OwnedValue {
         match self.0.next() {
-            Some(Node::Static(s)) => Ok(OwnedValue::Static(s)),
-            Some(Node::String(s)) => Ok(OwnedValue::from(s)),
-            Some(Node::Array { len, .. }) => Ok(self.parse_array(len)),
-            Some(Node::Object { len, .. }) => Ok(self.parse_map(len)),
-            None => Err(simd_json::Error::generic(simd_json::ErrorType::Eof)),
+            Some(Node::Static(s)) => OwnedValue::Static(s),
+            Some(Node::String(s)) => OwnedValue::from(s),
+            Some(Node::Array { len, .. }) => self.parse_array(len),
+            Some(Node::Object { len, .. }) => self.parse_map(len),
+            None => unreachable!("We have validated the tape in the second stage of parsing, this should never happen"),
         }
     }
     #[inline(always)]
@@ -41,7 +41,7 @@ impl<'input, 'tape> OwnedDeser<'input, 'tape> {
 
         unsafe {
             for i in 0..len {
-                std::ptr::write(res.get_unchecked_mut(i), self.parse().unwrap());
+                std::ptr::write(res.get_unchecked_mut(i), self.parse());
             }
             res.set_len(len);
         }
@@ -56,12 +56,14 @@ impl<'input, 'tape> OwnedDeser<'input, 'tape> {
         // element so we eat this
         if let OwnedValue::Object(ref mut res) = res {
             for _ in 0..len {
-                if let Node::String(key) = self.0.next().unwrap() {
-                    res.insert_nocheck(key.into(), self.parse().unwrap());
+                if let Some(Node::String(key)) = self.0.next() {
+                    res.insert_nocheck(key.into(), self.parse());
                 } else {
-                    unreachable!()
+                    unreachable!("We have validated the tape in the second stage of parsing, this should never happen")
                 }
             }
+        } else {
+            unreachable!("We have generated this object and know it is nothing else")
         }
         res
     }
@@ -71,7 +73,7 @@ impl<'input> Deserialize<'input> for OwnedValue {
     where
         Self: Sized + 'input,
     {
-        OwnedDeser(tape).parse()
+        Ok(OwnedDeser(tape).parse())
     }
 }
 
@@ -79,25 +81,25 @@ struct BorrowedDeser<'input, 'tape>(&'tape mut crate::Tape<'input>);
 
 impl<'input, 'tape> BorrowedDeser<'input, 'tape> {
     #[inline(always)]
-    fn parse(&mut self) -> simd_json::Result<BorrowedValue<'input>> {
+    fn parse(&mut self) -> BorrowedValue<'input> {
         match self.0.next() {
-            Some(Node::Static(s)) => Ok(BorrowedValue::Static(s)),
-            Some(Node::String(s)) => Ok(BorrowedValue::from(s)),
-            Some(Node::Array { len, .. }) => Ok(self.parse_array(len)),
-            Some(Node::Object { len, .. }) => Ok(self.parse_map(len)),
-            None => Err(simd_json::Error::generic(simd_json::ErrorType::Eof)),
+            Some(Node::Static(s)) => BorrowedValue::Static(s),
+            Some(Node::String(s)) => BorrowedValue::from(s),
+            Some(Node::Array { len, .. }) => self.parse_array(len),
+            Some(Node::Object { len, .. }) => self.parse_map(len),
+            None => unreachable!("We have validated the tape in the second stage of parsing, this should never happen"),
         }
     }
     #[inline(always)]
     fn parse_array(&mut self, len: usize) -> BorrowedValue<'input> {
-        let mut res = Vec::with_capacity(len);
+        let mut res: Vec<BorrowedValue<'input>> = Vec::with_capacity(len);
 
         // Rust doesn't optimize the normal loop away here
         // so we write our own avoiding the length
         // checks during push
         unsafe {
             for i in 0..len {
-                std::ptr::write(res.get_unchecked_mut(i), self.parse().unwrap());
+                std::ptr::write(res.get_unchecked_mut(i), self.parse());
             }
             res.set_len(len);
         }
@@ -112,14 +114,14 @@ impl<'input, 'tape> BorrowedDeser<'input, 'tape> {
         // element so we eat this
         if let BorrowedValue::Object(ref mut res) = res {
             for _ in 0..len {
-                if let Node::String(key) = self.0.next().unwrap() {
-                    res.insert_nocheck(key.into(), self.parse().unwrap());
+                if let Some(Node::String(key)) = self.0.next() {
+                    res.insert_nocheck(key.into(), self.parse());
                 } else {
-                    unreachable!()
+                    unreachable!("We have validated the tape in the second stage of parsing, this should never happen")
                 }
             }
         } else {
-            unreachable!()
+            unreachable!("We have generated this object and know it is nothing else")
         }
 
         res
@@ -130,6 +132,6 @@ impl<'input> Deserialize<'input> for BorrowedValue<'input> {
     where
         Self: Sized + 'input,
     {
-        BorrowedDeser(tape).parse()
+        Ok(BorrowedDeser(tape).parse())
     }
 }
