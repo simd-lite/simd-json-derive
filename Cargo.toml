@@ -48,6 +48,10 @@ name = "enum1"
 [[example]]
 name = "untagged"
 
+[[example]]
+name = "person"
+
+
 [[bench]]
 name = "value"
 harness = false
