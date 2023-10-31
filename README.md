@@ -43,3 +43,8 @@ For structs:
 
 * `rename_all = "camelCase"` - renames all (not otherwise renamed) based on the rule, `camelCase` is currently supported
 * `deny_unknown_fields` - Errors if unknown fields are encountered
+
+### All Thanks To Our Contributors:
+<a href="https://github.com/NightMare-Vortex/simd-json-derive/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=NightMare-Vortex/simd-json-derive" />
+</a>
