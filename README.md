@@ -33,7 +33,7 @@ fn main -> Result<(), simd_json::Error> {
 
 ## Supported Attributes
 
-Attributres are supported for both `#[simd_json(...)]` and for compatibilty also for `#[serde(...)]` and follow the same naming conventions as serde.
+Attributes are supported for both `#[simd_json(...)]` and for compatibilty also for `#[serde(...)]` and follow the same naming conventions as serde.
 
 For fields:
 
