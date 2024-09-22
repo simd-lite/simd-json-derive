@@ -45,27 +45,17 @@ where
     where
         Self: Sized + 'input,
     {
-        match tape.next() {
-            Some(simd_json::Node::Array { len, .. }) => {
-                let mut res = Vec::with_capacity(len);
-                unsafe {
-                    for i in 0..len {
-                        match T::from_tape(tape) {
-                            Ok(t) => std::ptr::write(res.get_unchecked_mut(i), t),
-                            Err(e) => {
-                                res.set_len(i);
-                                return Err(e);
-                            }
-                        }
-                    }
-                    res.set_len(len);
-                }
-                Ok(res)
-            }
-            _other => Err(simd_json::Error::generic(
+        let Some(simd_json::Node::Array { len, .. }) = tape.next() else {
+            return Err(simd_json::Error::generic(
                 simd_json::ErrorType::ExpectedArray,
-            )),
+            ));
+        };
+        let mut res = Vec::with_capacity(len);
+        for _ in 0..len {
+            let t = T::from_tape(tape)?;
+            res.push(t);
         }
+        Ok(res)
     }
 }
 

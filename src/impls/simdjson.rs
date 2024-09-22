@@ -38,14 +38,10 @@ impl<'input, 'tape> OwnedDeser<'input, 'tape> {
         // Rust doesn't optimize the normal loop away here
         // so we write our own avoiding the length
         // checks during push
-
-        unsafe {
-            for i in 0..len {
-                std::ptr::write(res.get_unchecked_mut(i), self.parse());
-            }
-            res.set_len(len);
+        for _ in 0..len {
+            res.push(self.parse())
         }
-        OwnedValue::Array(res)
+        OwnedValue::Array(Box::new(res))
     }
 
     #[inline(always)]
@@ -93,17 +89,10 @@ impl<'input, 'tape> BorrowedDeser<'input, 'tape> {
     #[inline(always)]
     fn parse_array(&mut self, len: usize) -> BorrowedValue<'input> {
         let mut res: Vec<BorrowedValue<'input>> = Vec::with_capacity(len);
-
-        // Rust doesn't optimize the normal loop away here
-        // so we write our own avoiding the length
-        // checks during push
-        unsafe {
-            for i in 0..len {
-                std::ptr::write(res.get_unchecked_mut(i), self.parse());
-            }
-            res.set_len(len);
+        for _ in 0..len {
+            res.push(self.parse());
         }
-        BorrowedValue::Array(res)
+        BorrowedValue::Array(Box::new(res))
     }
 
     #[inline(always)]

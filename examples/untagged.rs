@@ -12,6 +12,7 @@ pub struct ErrorResponse<'de> {
 }
 
 #[derive(Debug)]
+#[allow(dead_code)]
 enum Response<'de> {
     LoginResponse(LoginResponse<'de>),
     Error(ErrorResponse<'de>),

@@ -1,6 +1,6 @@
 [package]
 name = "simd-json-derive"
-version = "0.13.0"
+version = "0.14.0-rc.1"
 authors = ["Heinz N. Gies <heinz@licenser.net>"]
 edition = "2021"
 license = "Apache-2.0/MIT"
@@ -9,7 +9,7 @@ documentation = "https://docs.rs/simd-json-derive"
 readme = "README.md"
 homepage = "https://docs.rs/simd-json-derive"
 repository = "https://github.com/simd-lite/simd-json-derive/"
-rust-version = "1.61"
+rust-version = "1.80"
 
 [profile.bench]
 debug = 2
@@ -20,12 +20,12 @@ members = ["simd-json-derive-int"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-simd-json-derive-int = { path = "./simd-json-derive-int", version = "0.13" }
-value-trait = { version = "0.8" }
+simd-json-derive-int = { path = "./simd-json-derive-int", version = "0.14.0-rc.1" }
+value-trait = { version = "0.10.0" }
 itoa = "1"
 ryu = "1"
 chrono = { version = "0.4", optional = true }
-simd-json = { version = "0.13.0" }
+simd-json = { version = "0.14.0" }
 heap-array = { version = "0.1.1", optional = true }
 
 [dev-dependencies]
