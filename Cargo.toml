@@ -21,7 +21,7 @@ members = ["simd-json-derive-int"]
 
 [dependencies]
 simd-json-derive-int = { path = "./simd-json-derive-int", version = "0.13" }
-value-trait = { version = "0.8" }
+value-trait = { version = "0.10" }
 itoa = "1"
 ryu = "1"
 chrono = { version = "0.4", optional = true }
