@@ -140,26 +140,32 @@ impl Parse for StructAttrs {
     }
 }
 
-pub(crate) fn field_attrs(attr: &Attribute) -> FieldAttrs {
+pub fn field_attrs(attr: &Attribute) -> FieldAttrs {
     attr.parse_args::<FieldAttrs>()
         .expect("failed to parse attributes")
 }
 
-pub(crate) fn struct_attrs(attr: &Attribute) -> StructAttrs {
+pub fn struct_attrs(attr: &Attribute) -> StructAttrs {
     attr.parse_args::<StructAttrs>()
         .expect("failed to parse attributes")
 }
 
-pub(crate) fn get_attr<'field>(
-    attrs: &'field [Attribute],
-    name: &str,
-) -> Option<&'field Attribute> {
+pub fn get_attr<'field>(attrs: &'field [Attribute], name: &str) -> Option<&'field Attribute> {
     attrs
         .iter()
         .find(|a| a.path().get_ident().map(|i| i == name).unwrap_or_default())
 }
 
 impl StructAttrs {
+    pub(crate) fn parse(attrs: Vec<Attribute>) -> StructAttrs {
+        if let Some(attrs) = get_attr(&attrs, "simd_json") {
+            struct_attrs(attrs)
+        } else if let Some(attrs) = get_attr(&attrs, "serde") {
+            struct_attrs(attrs)
+        } else {
+            StructAttrs::default()
+        }
+    }
     pub(crate) fn deny_unknown_fields(&self) -> bool {
         self.deny_unknown_fields
     }

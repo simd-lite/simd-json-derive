@@ -6,6 +6,7 @@ pub enum StoredVariants {
     Small(u8, i8),
     Signy(i64),
     Stringy(String),
+    // Named { a: u8, b: i8 },
 }
 
 fn main() {
