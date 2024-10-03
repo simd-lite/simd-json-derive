@@ -117,6 +117,6 @@ impl<W: Write> BaseGenerator for DummyGenerator<W> {
     }
     #[inline]
     fn write_min(&mut self, _: &[u8], _: u8) -> io::Result<()> {
-        unimplemented!()
+        unimplemented!("write min is not supported")
     }
 }
