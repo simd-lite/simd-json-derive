@@ -10,20 +10,22 @@ jobs:
   tests:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v1
-    - uses: actions-rs/toolchain@v1
-      with:
-        toolchain: stable
-        override: true
-    - name: Install cargo-llvm-cov
-      uses: taiki-e/install-action@cargo-llvm-cov
-    - name: Run tests with llvm-cov
-      env:
-        RUSTFLAGS: '-C target-cpu=native'
-      run: cargo llvm-cov --all-features --lcov --output-path lcov.txt
-    - name: Upload coverage to codecov
-      uses: codecov/codecov-action@v3
-      with:
-        files: ./lcov.txt # optional
-        fail_ci_if_error: true # optional (default = false)
-        verbose: true # optional (default = false)
+      - uses: actions/checkout@v1
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+      - name: Install cargo-llvm-cov
+        uses: taiki-e/install-action@cargo-llvm-cov
+      - name: Run tests with llvm-cov
+        env:
+          RUSTFLAGS: "-C target-cpu=native"
+        run: cargo llvm-cov --all-features --lcov --output-path lcov.txt
+      - name: Upload coverage to codecov
+        uses: codecov/codecov-action@v3
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+        with:
+          files: ./lcov.txt # optional
+          fail_ci_if_error: true # optional (default = false)
+          verbose: true # optional (default = false)
