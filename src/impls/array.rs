@@ -39,15 +39,18 @@ where
     T: Deserialize<'input>,
 {
     #[inline]
-    fn from_tape(tape: &mut Tape<'input>) -> simd_json::Result<Self>
+    fn from_tape(tape: &mut Tape<'input>) -> de::Result<Self>
     where
         Self: Sized + 'input,
     {
         if let Some(Node::Array { len, .. }) = tape.next() {
             if len != N {
-                return Err(simd_json::Error::generic(simd_json::ErrorType::Serde(
-                    format!("expected array of len {N} found array of len {len}"),
-                )));
+                return Err(
+                    simd_json::Error::generic(simd_json::ErrorType::Serde(format!(
+                        "expected array of len {N} found array of len {len}"
+                    )))
+                    .into(),
+                );
             }
 
             if N == 0 {
@@ -76,9 +79,7 @@ where
             // all elements initialized
             Ok(unsafe { array.map(|x| x.assume_init()) })
         } else {
-            Err(simd_json::Error::generic(
-                simd_json::ErrorType::ExpectedArray,
-            ))
+            Err(simd_json::Error::generic(simd_json::ErrorType::ExpectedArray).into())
         }
     }
 }

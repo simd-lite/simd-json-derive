@@ -1,11 +1,11 @@
-use crate::*;
+use crate::{de, Deserialize, Serialize, Tape};
 
 impl<'input, T> Deserialize<'input> for Box<T>
 where
     T: Deserialize<'input>,
 {
     #[inline]
-    fn from_tape(tape: &mut Tape<'input>) -> simd_json::Result<Self>
+    fn from_tape(tape: &mut Tape<'input>) -> de::Result<Self>
     where
         Self: std::marker::Sized + 'input,
     {
@@ -22,9 +22,9 @@ macro_rules! deref_impl {
         $(#[doc = $doc])*
         impl <$($desc)+ {
             #[inline]
-            fn json_write<W>(&self, writer: &mut W) -> Result
+            fn json_write<W>(&self, writer: &mut W) -> std::io::Result<()>
             where
-                W: Write,
+                W: std::io::Write,
             {
                 (**self).json_write(writer)
             }

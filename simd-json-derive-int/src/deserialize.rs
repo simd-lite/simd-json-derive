@@ -6,6 +6,7 @@ use crate::args::*;
 mod r#struct;
 
 mod r#enum;
+
 pub(crate) fn derive(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     match input {

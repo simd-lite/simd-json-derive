@@ -23,14 +23,11 @@ pub(crate) fn derive(
         let expanded = quote! {
             impl #all_generics ::simd_json_derive::Deserialize <#derive_lt> for #ident #generics {
                 #[inline]
-                fn from_tape(__deser_tape: &mut ::simd_json_derive::Tape<#derive_lt>) -> ::simd_json::Result<Self>
+                fn from_tape(__deser_tape: &mut ::simd_json_derive::Tape<#derive_lt>) -> ::simd_json_derive::de::Result<Self>
                 where
                     Self: std::marker::Sized + #derive_lt
                 {
-                    match ::simd_json_derive::Deserialize::from_tape(__deser_tape) {
-                        Ok(__inner) => Ok(Self(__inner)),
-                        Err(e) => Err(e)
-                    }
+                    ::simd_json_derive::Deserialize::from_tape(__deser_tape).map(Self)
                 }
             }
         };
