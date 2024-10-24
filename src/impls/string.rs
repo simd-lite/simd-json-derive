@@ -18,7 +18,7 @@ impl<'input> Deserialize<'input> for String {
     {
         match tape.next() {
             Some(simd_json::Node::String(s)) => Ok(String::from(s)),
-            _ => Err(simd_json::Error::generic(simd_json::ErrorType::ExpectedString).into()),
+            _ => Err(de::Error::expected_string()),
         }
     }
 }
@@ -31,7 +31,7 @@ impl<'input> Deserialize<'input> for &'input str {
     {
         match tape.next() {
             Some(simd_json::Node::String(s)) => Ok(s),
-            _ => Err(simd_json::Error::generic(simd_json::ErrorType::ExpectedString).into()),
+            _ => Err(de::Error::expected_string()),
         }
     }
 }
@@ -61,8 +61,8 @@ impl Serialize for str {
 //     {
 //         match tape.next() {
 //             Some(simd_json::Node::String(s)) => Ok(s),
-//             _ => Err(simd_json::Error::generic(
-//                 simd_json::ErrorType::ExpectedString,
+//             _ => Err(de::Error::simd(
+//                 de::Error::expected_string(),
 //             )),
 //         }
 //     }
@@ -75,7 +75,7 @@ impl<'input> Deserialize<'input> for Box<str> {
     {
         match tape.next() {
             Some(simd_json::Node::String(s)) => Ok(Box::from(s)),
-            _ => Err(simd_json::Error::generic(simd_json::ErrorType::ExpectedString).into()),
+            _ => Err(de::Error::expected_string()),
         }
     }
 }

@@ -86,10 +86,10 @@ where
                 Some(simd_json::Node::String("Err")) => Ok(Err(TErr::from_tape(tape)?)),
                 Some(simd_json::Node::String("ok")) => Ok(Ok(TOk::from_tape(tape)?)),
                 Some(simd_json::Node::String("err")) => Ok(Err(TErr::from_tape(tape)?)),
-                _ => Err(simd_json::Error::generic(simd_json::ErrorType::ExpectedMap).into()),
+                _ => Err(de::Error::custom("result not `Ok` or `Err`")),
             }
         } else {
-            Err(simd_json::Error::generic(simd_json::ErrorType::ExpectedMap).into())
+            Err(de::Error::InvalidStructRepresentation)
         }
     }
 }
