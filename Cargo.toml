@@ -1,6 +1,6 @@
 [package]
 name = "simd-json-derive"
-version = "0.14.0"
+version = "0.15.0"
 authors = ["Heinz N. Gies <heinz@licenser.net>"]
 edition = "2021"
 license = "Apache-2.0/MIT"
@@ -20,7 +20,7 @@ members = ["simd-json-derive-int"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-simd-json-derive-int = { path = "./simd-json-derive-int", version = "0.14.0-rc.1" }
+simd-json-derive-int = { path = "./simd-json-derive-int", version = "0.15.0" }
 value-trait = { version = "0.10.0" }
 itoa = "1"
 ryu = "1"
