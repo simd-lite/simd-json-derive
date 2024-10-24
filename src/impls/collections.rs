@@ -49,7 +49,7 @@ where
         Self: Sized + 'input,
     {
         let Some(simd_json::Node::Array { len, .. }) = tape.next() else {
-            return Err(simd_json::Error::generic(simd_json::ErrorType::ExpectedArray).into());
+            return Err(de::Error::expected_array());
         };
         let mut res = Vec::with_capacity(len);
         for _ in 0..len {
@@ -78,7 +78,7 @@ where
             }
             Ok(v)
         } else {
-            Err(simd_json::Error::generic(simd_json::ErrorType::ExpectedArray).into())
+            Err(de::Error::expected_array())
         }
     }
 }
@@ -99,7 +99,7 @@ where
             }
             Ok(v)
         } else {
-            Err(simd_json::Error::generic(simd_json::ErrorType::ExpectedArray).into())
+            Err(de::Error::expected_array())
         }
     }
 }
@@ -120,7 +120,7 @@ where
             }
             Ok(v)
         } else {
-            Err(simd_json::Error::generic(simd_json::ErrorType::ExpectedArray).into())
+            Err(de::Error::expected_array())
         }
     }
 }
@@ -141,7 +141,7 @@ where
             }
             Ok(v)
         } else {
-            Err(simd_json::Error::generic(simd_json::ErrorType::ExpectedArray).into())
+            Err(de::Error::expected_array())
         }
     }
 }
@@ -186,7 +186,7 @@ where
             }
             Ok(v)
         } else {
-            Err(simd_json::Error::generic(simd_json::ErrorType::ExpectedArray).into())
+            Err(de::Error::expected_array())
         }
     }
 }
@@ -242,7 +242,7 @@ where
             }
             Ok(v)
         } else {
-            Err(simd_json::Error::generic(simd_json::ErrorType::ExpectedMap).into())
+            Err(de::Error::expected_map())
         }
     }
 }
@@ -265,7 +265,7 @@ where
             }
             Ok(v)
         } else {
-            Err(simd_json::Error::generic(simd_json::ErrorType::ExpectedMap).into())
+            Err(de::Error::expected_map())
         }
     }
 }
@@ -304,7 +304,7 @@ where
                         let end = Deserialize::from_tape(tape)?;
                         Ok(start..end)
                     } else {
-                        Err(simd_json::Error::generic(simd_json::ErrorType::ExpectedString).into())
+                        Err(de::Error::expected_string())
                     }
                 }
                 Some(simd_json::Node::String("end")) => {
@@ -313,13 +313,13 @@ where
                         let start = Deserialize::from_tape(tape)?;
                         Ok(start..end)
                     } else {
-                        Err(simd_json::Error::generic(simd_json::ErrorType::ExpectedString).into())
+                        Err(de::Error::expected_string())
                     }
                 }
-                _ => Err(simd_json::Error::generic(simd_json::ErrorType::ExpectedString).into()),
+                _ => Err(de::Error::expected_string()),
             }
         } else {
-            Err(simd_json::Error::generic(simd_json::ErrorType::ExpectedMap).into())
+            Err(de::Error::expected_map())
         }
     }
 }
@@ -336,9 +336,7 @@ impl<'input, T: Deserialize<'input>> Deserialize<'input> for HeapArray<T> {
         if let Some(simd_json::Node::Array { len, .. }) = tape.next() {
             HeapArray::try_from_fn(len, |_| T::from_tape(tape))
         } else {
-            Err(simd_json::Error::generic(
-                simd_json::ErrorType::ExpectedArray,
-            ))
+            Err(de::Error::expected_array())
         }
     }
 }

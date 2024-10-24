@@ -19,7 +19,7 @@ impl<'input> Deserialize<'input> for () {
         if let Some(simd_json::Node::Static(simd_json::StaticNode::Null)) = tape.next() {
             Ok(())
         } else {
-            Err(simd_json::Error::generic(simd_json::ErrorType::ExpectedNull).into())
+            Err(de::Error::expected_null())
         }
     }
 }
@@ -62,9 +62,7 @@ macro_rules! tuple_impls {
                             $($name::from_tape(tape)?,)+
                         ))
                     } else {
-                        Err(simd_json::Error::generic(
-                            simd_json::ErrorType::ExpectedArray,
-                        ).into())
+                        Err(de::Error::expected_array())
                     }
                 }
             }

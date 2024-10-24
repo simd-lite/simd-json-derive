@@ -45,12 +45,9 @@ where
     {
         if let Some(Node::Array { len, .. }) = tape.next() {
             if len != N {
-                return Err(
-                    simd_json::Error::generic(simd_json::ErrorType::Serde(format!(
-                        "expected array of len {N} found array of len {len}"
-                    )))
-                    .into(),
-                );
+                return Err(de::Error::custom(
+                    "expected array of len {N} found array of len {len}",
+                ));
             }
 
             if N == 0 {
@@ -79,7 +76,7 @@ where
             // all elements initialized
             Ok(unsafe { array.map(|x| x.assume_init()) })
         } else {
-            Err(simd_json::Error::generic(simd_json::ErrorType::ExpectedArray).into())
+            Err(de::Error::expected_array())
         }
     }
 }

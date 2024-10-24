@@ -17,7 +17,7 @@ impl<'input> Deserialize<'input> for bool {
         if let Some(simd_json::Node::Static(simd_json::StaticNode::Bool(r))) = tape.next() {
             Ok(r)
         } else {
-            Err(simd_json::Error::generic(simd_json::ErrorType::ExpectedBoolean).into())
+            Err(de::Error::expected_boolean())
         }
     }
 }
@@ -44,30 +44,20 @@ macro_rules! itoa {
             {
                 match tape.next() {
                     Some(simd_json::Node::Static(simd_json::StaticNode::I64(i))) => {
-                        <$t>::try_from(i).map_err(|_| {
-                            simd_json::Error::generic(simd_json::ErrorType::ExpectedInteger).into()
-                        })
+                        <$t>::try_from(i).map_err(de::Error::from)
                     }
                     Some(simd_json::Node::Static(simd_json::StaticNode::U64(i))) => {
-                        <$t>::try_from(i).map_err(|_| {
-                            simd_json::Error::generic(simd_json::ErrorType::ExpectedInteger).into()
-                        })
+                        <$t>::try_from(i).map_err(de::Error::from)
                     }
                     #[cfg(feature = "128bit")]
                     Some(simd_json::Node::Static(simd_json::StaticNode::U128(i))) => {
-                        <$t>::try_from(i).map_err(|_| {
-                            simd_json::Error::generic(simd_json::ErrorType::ExpectedInteger).into()
-                        })
+                        <$t>::try_from(i).map_err(de::Error::from)
                     }
                     #[cfg(feature = "128bit")]
                     Some(simd_json::Node::Static(simd_json::StaticNode::I128(i))) => {
-                        <$t>::try_from(i).map_err(|_| {
-                            simd_json::Error::generic(simd_json::ErrorType::ExpectedInteger).into()
-                        })
+                        <$t>::try_from(i).map_err(de::Error::from)
                     }
-                    _ => {
-                        Err(simd_json::Error::generic(simd_json::ErrorType::ExpectedInteger).into())
-                    }
+                    _ => Err(de::Error::expected_integer()),
                 }
             }
         }
@@ -118,7 +108,7 @@ impl<'input> Deserialize<'input> for f64 {
             Some(simd_json::Node::Static(simd_json::StaticNode::U128(i))) => Ok(i as f64),
             #[cfg(feature = "128bit")]
             Some(simd_json::Node::Static(simd_json::StaticNode::I128(i))) => Ok(i as f64),
-            _ => Err(simd_json::Error::generic(simd_json::ErrorType::ExpectedFloat).into()),
+            _ => Err(de::Error::expected_float()),
         }
     }
 }
@@ -137,7 +127,7 @@ impl<'input> Deserialize<'input> for f32 {
             Some(simd_json::Node::Static(simd_json::StaticNode::U128(i))) => Ok(i as f32),
             #[cfg(feature = "128bit")]
             Some(simd_json::Node::Static(simd_json::StaticNode::I128(i))) => Ok(i as f32),
-            _ => Err(simd_json::Error::generic(simd_json::ErrorType::ExpectedFloat).into()),
+            _ => Err(de::Error::expected_float()),
         }
     }
 }

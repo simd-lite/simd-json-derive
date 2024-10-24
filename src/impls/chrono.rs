@@ -34,10 +34,9 @@ impl<'input> Deserialize<'input> for DateTime<FixedOffset> {
         Self: Sized + 'input,
     {
         match tape.next() {
-            Some(simd_json::Node::String(s)) => DateTime::parse_from_rfc2822(s).map_err(|_| {
-                simd_json::Error::generic(simd_json::ErrorType::ExpectedString).into()
-            }),
-            _ => Err(simd_json::Error::generic(simd_json::ErrorType::ExpectedString).into()),
+            Some(simd_json::Node::String(s)) => DateTime::parse_from_rfc2822(s)
+                .map_err(|e| de::Error::custom(format!("Invalid date string `{s}`: {e}"))),
+            _ => Err(de::Error::expected_string()),
         }
     }
 }
