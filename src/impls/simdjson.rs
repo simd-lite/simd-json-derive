@@ -1,4 +1,4 @@
-use crate::{Deserialize, Serialize};
+use crate::{de, Deserialize, Serialize};
 use simd_json::{BorrowedValue, Node, OwnedValue};
 use value_trait::{base::Writable, ValueBuilder};
 
@@ -65,7 +65,7 @@ impl<'input, 'tape> OwnedDeser<'input, 'tape> {
     }
 }
 impl<'input> Deserialize<'input> for OwnedValue {
-    fn from_tape(tape: &mut crate::Tape<'input>) -> simd_json::Result<Self>
+    fn from_tape(tape: &mut crate::Tape<'input>) -> de::Result<Self>
     where
         Self: Sized + 'input,
     {
@@ -117,7 +117,7 @@ impl<'input, 'tape> BorrowedDeser<'input, 'tape> {
     }
 }
 impl<'input> Deserialize<'input> for BorrowedValue<'input> {
-    fn from_tape(tape: &mut crate::Tape<'input>) -> simd_json::Result<Self>
+    fn from_tape(tape: &mut crate::Tape<'input>) -> de::Result<Self>
     where
         Self: Sized + 'input,
     {

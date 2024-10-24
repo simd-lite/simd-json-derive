@@ -81,7 +81,7 @@ pub(super) fn derive(
             Some(::simd_json::Node::String(#unnamed_values)) => {
                 match __deser_tape.next() {
                   Some(::simd_json::Node::Array{len: #unnamed_len, ..}) => Ok(#ident::#unnamed_keys(#unnamed_fields)),
-                  _ => Err(::simd_json::Error::generic(::simd_json::ErrorType::ExpectedArray))   // FIXME
+                  _ => Err(::simd_json_derive::de::Error::FieldNotAnArray(#unnamed_values))
                 }
 
            },
@@ -110,7 +110,7 @@ pub(super) fn derive(
     let expanded = quote! {
         impl #all_generics ::simd_json_derive::Deserialize <#derive_lt> for #ident #generics {
             #[inline]
-            fn from_tape(__deser_tape: &mut ::simd_json_derive::Tape<#derive_lt>) -> ::simd_json::Result<Self>
+            fn from_tape(__deser_tape: &mut ::simd_json_derive::Tape<#derive_lt>) -> ::simd_json_derive::de::Result<Self>
             where
                 Self: std::marker::Sized + #derive_lt
             {
@@ -120,12 +120,13 @@ pub(super) fn derive(
                         match __deser_tape.next() {
                             #unnamed1
                             #unnamed
-                            Some(__other) => Err(::simd_json::Error::generic(::simd_json::ErrorType::ExpectedMap)), // FIXME
-                            None => Err(::simd_json::Error::generic(::simd_json::ErrorType::ExpectedMap)) // FIXME
+                            Some(::simd_json::Node::String(__other)) => Err(::simd_json_derive::de::Error::UnknownEnumVariant(__other.to_string()).into()),
+                            Some(_) => Err(::simd_json_derive::de::Error::InvalidEnumRepresentation),
+                            None => Err(::simd_json_derive::de::Error::EOF)
                         }
                     },
-                    Some(__other) => Err(::simd_json::Error::generic(::simd_json::ErrorType::ExpectedMap)), // FIXME
-                    None => Err(::simd_json::Error::generic(::simd_json::ErrorType::ExpectedMap)) // FIXME
+                    Some(__other) => Err(::simd_json_derive::de::Error::InvalidEnumRepresentation),
+                    None => Err(::simd_json_derive::de::Error::EOF)
                 }
             }
         }

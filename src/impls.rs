@@ -7,7 +7,7 @@ mod primitives;
 mod simdjson;
 mod string;
 mod tpl;
-use crate::*;
+use crate::{de, *};
 use value_trait::generator::BaseGenerator;
 
 impl<T> Serialize for Option<T>
@@ -32,7 +32,7 @@ where
     T: Deserialize<'input>,
 {
     #[inline]
-    fn from_tape(tape: &mut Tape<'input>) -> simd_json::Result<Self>
+    fn from_tape(tape: &mut Tape<'input>) -> de::Result<Self>
     where
         Self: Sized + 'input,
     {
@@ -76,7 +76,7 @@ where
     TErr: Deserialize<'input>,
 {
     #[inline]
-    fn from_tape(tape: &mut Tape<'input>) -> simd_json::Result<Self>
+    fn from_tape(tape: &mut Tape<'input>) -> de::Result<Self>
     where
         Self: Sized + 'input,
     {
@@ -86,10 +86,10 @@ where
                 Some(simd_json::Node::String("Err")) => Ok(Err(TErr::from_tape(tape)?)),
                 Some(simd_json::Node::String("ok")) => Ok(Ok(TOk::from_tape(tape)?)),
                 Some(simd_json::Node::String("err")) => Ok(Err(TErr::from_tape(tape)?)),
-                _ => Err(simd_json::Error::generic(simd_json::ErrorType::ExpectedMap)),
+                _ => Err(simd_json::Error::generic(simd_json::ErrorType::ExpectedMap).into()),
             }
         } else {
-            Err(simd_json::Error::generic(simd_json::ErrorType::ExpectedMap))
+            Err(simd_json::Error::generic(simd_json::ErrorType::ExpectedMap).into())
         }
     }
 }

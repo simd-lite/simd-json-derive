@@ -60,15 +60,14 @@ pub(crate) fn derive(
             #[inline]
             #[allow(clippy::forget_copy)]
             #[allow(clippy::forget_non_drop)]
-            fn from_tape(__deser_tape: &mut ::simd_json_derive::Tape <#derive_lt>) -> ::simd_json::Result<Self>
+            fn from_tape(__deser_tape: &mut ::simd_json_derive::Tape <#derive_lt>) -> ::simd_json_derive::de::Result<Self>
             where
                 Self: std::marker::Sized + #derive_lt
             {
-                use ::serde::de::Error;
                 let __deser_len: usize = if let Some(::simd_json::Node::Object{len, ..}) = __deser_tape.next() {
                     len
                 } else {
-                    return Err(::simd_json::Error::generic(::simd_json::ErrorType::ExpectedMap));
+                    return Err(::simd_json_derive::de::Error::InvalidStructRepresentation);
                 };
 
                 #(let mut #value_locals = None;)*
@@ -90,7 +89,7 @@ pub(crate) fn derive(
                                 }
                                 )*
                                 __unknown_field if #deny_unknown_fields => {
-                                    return Err(::simd_json::Error::unknown_field(__unknown_field, &[ #(#value_keys,)* #(#option_keys,)* ]));
+                                    return Err(::simd_json_derive::de::Error::UnknownField(__unknown_field.to_string(), &[ #(#value_keys,)* #(#option_keys,)* ]));
                                 }
                                 _ => {
                                     // ignore unknown field
@@ -107,7 +106,7 @@ pub(crate) fn derive(
                             #options: #option_locals,
                         )*
                         #(
-                            #values: #value_locals.ok_or_else(|| ::simd_json::Error::custom(format!("missing field: `{}`", #value_keys)))?,
+                            #values: #value_locals.ok_or_else(|| ::simd_json_derive::de::Error::MissingField(#value_keys))?,
                         )*
                 })
             }

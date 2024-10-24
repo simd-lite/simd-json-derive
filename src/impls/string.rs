@@ -1,4 +1,4 @@
-use crate::*;
+use crate::{de, BaseGenerator, Deserialize, DummyGenerator, Result, Serialize, Tape, Write};
 
 impl Serialize for String {
     #[inline]
@@ -12,30 +12,26 @@ impl Serialize for String {
 
 impl<'input> Deserialize<'input> for String {
     #[inline]
-    fn from_tape(tape: &mut Tape<'input>) -> simd_json::Result<Self>
+    fn from_tape(tape: &mut Tape<'input>) -> de::Result<Self>
     where
         Self: Sized + 'input,
     {
         match tape.next() {
             Some(simd_json::Node::String(s)) => Ok(String::from(s)),
-            _ => Err(simd_json::Error::generic(
-                simd_json::ErrorType::ExpectedString,
-            )),
+            _ => Err(simd_json::Error::generic(simd_json::ErrorType::ExpectedString).into()),
         }
     }
 }
 
 impl<'input> Deserialize<'input> for &'input str {
     #[inline]
-    fn from_tape(tape: &mut Tape<'input>) -> simd_json::Result<Self>
+    fn from_tape(tape: &mut Tape<'input>) -> de::Result<Self>
     where
         Self: Sized + 'input,
     {
         match tape.next() {
             Some(simd_json::Node::String(s)) => Ok(s),
-            _ => Err(simd_json::Error::generic(
-                simd_json::ErrorType::ExpectedString,
-            )),
+            _ => Err(simd_json::Error::generic(simd_json::ErrorType::ExpectedString).into()),
         }
     }
 }
@@ -73,15 +69,13 @@ impl Serialize for str {
 // }
 
 impl<'input> Deserialize<'input> for Box<str> {
-    fn from_tape(tape: &mut Tape<'input>) -> simd_json::Result<Self>
+    fn from_tape(tape: &mut Tape<'input>) -> de::Result<Self>
     where
         Self: Sized + 'input,
     {
         match tape.next() {
             Some(simd_json::Node::String(s)) => Ok(Box::from(s)),
-            _ => Err(simd_json::Error::generic(
-                simd_json::ErrorType::ExpectedString,
-            )),
+            _ => Err(simd_json::Error::generic(simd_json::ErrorType::ExpectedString).into()),
         }
     }
 }
