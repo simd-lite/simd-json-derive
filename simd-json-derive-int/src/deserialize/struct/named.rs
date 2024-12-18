@@ -89,7 +89,10 @@ pub(crate) fn derive(
                                 }
                                 )*
                                 __unknown_field if #deny_unknown_fields => {
-                                    return Err(::simd_json_derive::de::Error::UnknownField(__unknown_field.to_string(), &[ #(#value_keys,)* #(#option_keys,)* ]));
+                                    return Err(::simd_json_derive::de::Error::UnknownField {
+                                        unknown_field: __unknown_field.to_string(),
+                                        possible_field_names: &[ #(#value_keys,)* #(#option_keys,)* ]
+                                    });
                                 }
                                 _ => {
                                     // ignore unknown field

@@ -10,7 +10,7 @@ impl Serialize for OwnedValue {
         self.write(writer)
     }
 }
-impl<'value> Serialize for BorrowedValue<'value> {
+impl Serialize for BorrowedValue<'_> {
     fn json_write<W>(&self, writer: &mut W) -> crate::Result
     where
         W: std::io::Write,
@@ -21,7 +21,7 @@ impl<'value> Serialize for BorrowedValue<'value> {
 
 struct OwnedDeser<'input, 'tape>(&'tape mut crate::Tape<'input>);
 
-impl<'input, 'tape> OwnedDeser<'input, 'tape> {
+impl OwnedDeser<'_, '_> {
     #[inline(always)]
     fn parse(&mut self) -> OwnedValue {
         match self.0.next() {
@@ -75,7 +75,7 @@ impl<'input> Deserialize<'input> for OwnedValue {
 
 struct BorrowedDeser<'input, 'tape>(&'tape mut crate::Tape<'input>);
 
-impl<'input, 'tape> BorrowedDeser<'input, 'tape> {
+impl<'input> BorrowedDeser<'input, '_> {
     #[inline(always)]
     fn parse(&mut self) -> BorrowedValue<'input> {
         match self.0.next() {

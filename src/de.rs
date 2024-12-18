@@ -26,8 +26,14 @@ pub enum Error {
     #[error("missing field: `{0}`")]
     MissingField(&'static str),
     /// Unexpected field
-    #[error("unknown field `{0}`, expected one of {}",expected(.1))]
-    UnknownField(String, &'static [&'static str]),
+    #[error(
+        "unknown field `{unknown_field}`, expected one of {}",
+        expected(possible_field_names)
+    )]
+    UnknownField {
+        unknown_field: String,
+        possible_field_names: &'static [&'static str],
+    },
     #[error("unnamed enum field `{0}` is not an array")]
     FieldNotAnArray(&'static str),
     #[error("unknwon enum variant `{0}`")]
