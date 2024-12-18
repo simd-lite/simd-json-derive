@@ -8,7 +8,7 @@ struct Guard<'a, T, const N: usize> {
     pub initialized: usize,
 }
 
-impl<'a, T, const N: usize> Guard<'a, T, N> {
+impl<T, const N: usize> Guard<'_, T, N> {
     #[inline]
     pub unsafe fn push_unchecked(&mut self, item: T) {
         // SAFETY: If `initialized` was correct before and the caller does not
@@ -21,7 +21,7 @@ impl<'a, T, const N: usize> Guard<'a, T, N> {
     }
 }
 
-impl<'a, T, const N: usize> Drop for Guard<'a, T, N> {
+impl<T, const N: usize> Drop for Guard<'_, T, N> {
     fn drop(&mut self) {
         debug_assert!(self.initialized <= N);
 

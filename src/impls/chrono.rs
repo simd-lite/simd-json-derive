@@ -16,7 +16,7 @@ impl<Tz: TimeZone> Serialize for DateTime<Tz> {
             inner: &'a D,
         }
 
-        impl<'a, D: fmt::Debug> fmt::Display for FormatWrapped<'a, D> {
+        impl<D: fmt::Debug> fmt::Display for FormatWrapped<'_, D> {
             fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
                 self.inner.fmt(f)
             }
