@@ -53,7 +53,7 @@ impl OwnedDeser<'_, '_> {
         if let OwnedValue::Object(ref mut res) = res {
             for _ in 0..len {
                 if let Some(Node::String(key)) = self.0.next() {
-                    res.insert_nocheck(key.into(), self.parse());
+                    unsafe { res.insert_nocheck(key.into(), self.parse()) };
                 } else {
                     unreachable!("We have validated the tape in the second stage of parsing, this should never happen")
                 }
@@ -104,7 +104,7 @@ impl<'input> BorrowedDeser<'input, '_> {
         if let BorrowedValue::Object(ref mut res) = res {
             for _ in 0..len {
                 if let Some(Node::String(key)) = self.0.next() {
-                    res.insert_nocheck(key.into(), self.parse());
+                    unsafe { res.insert_nocheck(key.into(), self.parse()) };
                 } else {
                     unreachable!("We have validated the tape in the second stage of parsing, this should never happen")
                 }
