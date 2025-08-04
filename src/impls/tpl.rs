@@ -95,8 +95,11 @@ mod test {
 
     #[test]
     fn tpl() {
-        assert_eq!((1).json_string().unwrap(), "1");
-        assert_eq!((1, 2).json_string().unwrap(), "[1,2]");
-        assert_eq!((1, 2, 3).json_string().unwrap(), "[1,2,3]");
+        assert_eq!((1).json_string().expect("invalid test data"), "1");
+        assert_eq!((1, 2).json_string().expect("invalid test data"), "[1,2]");
+        assert_eq!(
+            (1, 2, 3).json_string().expect("invalid test data"),
+            "[1,2,3]"
+        );
     }
 }

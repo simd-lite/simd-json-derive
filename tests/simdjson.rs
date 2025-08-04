@@ -11,6 +11,6 @@ fn owned_value() {
     assert_eq!(input, serialized);
     let deserialized = unsafe { simd_json::owned::Value::from_str(serialized.as_mut_str()) }
         .expect("Expected serialized input to be deserialized ok");
-    println!("{}", deserialized);
+    println!("{deserialized}");
     assert_eq!(value, deserialized);
 }

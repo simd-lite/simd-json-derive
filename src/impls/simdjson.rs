@@ -22,7 +22,6 @@ impl Serialize for BorrowedValue<'_> {
 struct OwnedDeser<'input, 'tape>(&'tape mut crate::Tape<'input>);
 
 impl OwnedDeser<'_, '_> {
-    #[inline(always)]
     fn parse(&mut self) -> OwnedValue {
         match self.0.next() {
             Some(Node::Static(s)) => OwnedValue::Static(s),
@@ -32,19 +31,17 @@ impl OwnedDeser<'_, '_> {
             None => unreachable!("We have validated the tape in the second stage of parsing, this should never happen"),
         }
     }
-    #[inline(always)]
     fn parse_array(&mut self, len: usize) -> OwnedValue {
         let mut res: Vec<OwnedValue> = Vec::with_capacity(len);
         // Rust doesn't optimize the normal loop away here
         // so we write our own avoiding the length
         // checks during push
         for _ in 0..len {
-            res.push(self.parse())
+            res.push(self.parse());
         }
         OwnedValue::Array(Box::new(res))
     }
 
-    #[inline(always)]
     fn parse_map(&mut self, len: usize) -> OwnedValue {
         let mut res = OwnedValue::object_with_capacity(len);
 
@@ -76,7 +73,6 @@ impl<'input> Deserialize<'input> for OwnedValue {
 struct BorrowedDeser<'input, 'tape>(&'tape mut crate::Tape<'input>);
 
 impl<'input> BorrowedDeser<'input, '_> {
-    #[inline(always)]
     fn parse(&mut self) -> BorrowedValue<'input> {
         match self.0.next() {
             Some(Node::Static(s)) => BorrowedValue::Static(s),
@@ -86,7 +82,6 @@ impl<'input> BorrowedDeser<'input, '_> {
             None => unreachable!("We have validated the tape in the second stage of parsing, this should never happen"),
         }
     }
-    #[inline(always)]
     fn parse_array(&mut self, len: usize) -> BorrowedValue<'input> {
         let mut res: Vec<BorrowedValue<'input>> = Vec::with_capacity(len);
         for _ in 0..len {
@@ -95,7 +90,6 @@ impl<'input> BorrowedDeser<'input, '_> {
         BorrowedValue::Array(Box::new(res))
     }
 
-    #[inline(always)]
     fn parse_map(&mut self, len: usize) -> BorrowedValue<'input> {
         let mut res = BorrowedValue::object_with_capacity(len);
 

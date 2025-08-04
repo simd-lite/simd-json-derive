@@ -7,7 +7,7 @@ mod primitives;
 mod simdjson;
 mod string;
 mod tpl;
-use crate::{de, *};
+use crate::{de, io, Deserialize, DummyGenerator, Serialize, Tape, Write};
 use value_trait::generator::BaseGenerator;
 
 impl<T> Serialize for Option<T>

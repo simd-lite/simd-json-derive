@@ -1,5 +1,5 @@
 use super::{BaseGenerator, DummyGenerator};
-use crate::*;
+use crate::{de, Deserialize, Serialize, Tape, Write};
 use chrono::{DateTime, FixedOffset, TimeZone};
 use std::{fmt, io};
 
