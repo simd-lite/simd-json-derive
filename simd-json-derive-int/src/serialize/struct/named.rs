@@ -25,9 +25,9 @@ pub(crate) fn derive(
     }
     let expanded = if skip_if.iter().all(Option::is_none) {
         if let Some((first, rest)) = keys.split_first_mut() {
-            *first = format!("{{{}", first);
+            *first = format!("{{{first}");
             for r in rest {
-                *r = format!(",{}", r);
+                *r = format!(",{r}");
             }
         };
 

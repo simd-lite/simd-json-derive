@@ -37,7 +37,7 @@ fn deser() {
         f3: SnotBadger::Snot,
     };
     let mut s = b.json_string().unwrap();
-    println!("{}", s);
+    println!("{s}");
     assert_eq!(r#"{"f1":1,"f2":"snot","f3":"Snot"}"#, s);
     let b1 = unsafe { Bla::from_str(s.as_mut_str()) }.unwrap();
     assert_eq!(b, b1);

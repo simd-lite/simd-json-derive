@@ -1,4 +1,4 @@
-use crate::*;
+use crate::{de, io, Deserialize, Node, Serialize, Tape, Write};
 use std::mem::MaybeUninit;
 use std::ptr;
 
@@ -27,8 +27,10 @@ impl<T, const N: usize> Drop for Guard<'_, T, N> {
 
         // SAFETY: this slice will contain only initialized objects.
         unsafe {
-            let slice =
-                ptr::slice_from_raw_parts_mut(self.array.as_mut_ptr() as *mut T, self.initialized);
+            let slice = ptr::slice_from_raw_parts_mut(
+                self.array.as_mut_ptr().cast::<T>(),
+                self.initialized,
+            );
             ptr::drop_in_place(slice);
         }
     }
@@ -52,6 +54,7 @@ where
 
             if N == 0 {
                 // Safety: N is 0, and so *const [T; N] is *const [T; 0]
+                #[allow(clippy::ref_as_ptr)]
                 return Ok(unsafe { ptr::read((&[]) as *const [T; N]) });
             }
 
@@ -116,10 +119,10 @@ mod test {
     #[test]
     fn arr() {
         let s: [u8; 0] = [];
-        assert_eq!(s.json_string().unwrap(), "[]");
-        assert_eq!([1].json_string().unwrap(), "[1]");
-        assert_eq!([1, 2].json_string().unwrap(), "[1,2]");
-        assert_eq!([1, 2, 3].json_string().unwrap(), "[1,2,3]");
+        assert_eq!(s.json_string().expect("invalid "), "[]");
+        assert_eq!([1].json_string().expect("invalid "), "[1]");
+        assert_eq!([1, 2].json_string().expect("invalid "), "[1,2]");
+        assert_eq!([1, 2, 3].json_string().expect("invalid "), "[1,2,3]");
     }
     #[test]
     fn arr2() {
@@ -143,9 +146,9 @@ mod test {
     #[test]
     fn slice() {
         let s: [u8; 0] = [];
-        assert_eq!(s.json_string().unwrap(), "[]");
-        assert_eq!([1].json_string().unwrap(), "[1]");
-        assert_eq!([1, 2].json_string().unwrap(), "[1,2]");
-        assert_eq!([1, 2, 3].json_string().unwrap(), "[1,2,3]");
+        assert_eq!(s.json_string().expect("invalid data"), "[]");
+        assert_eq!([1].json_string().expect("invalid data"), "[1]");
+        assert_eq!([1, 2].json_string().expect("invalid data"), "[1,2]");
+        assert_eq!([1, 2, 3].json_string().expect("invalid data"), "[1,2,3]");
     }
 }

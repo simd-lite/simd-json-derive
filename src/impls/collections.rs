@@ -74,7 +74,7 @@ where
         if let Some(simd_json::Node::Array { len, .. }) = tape.next() {
             let mut v = collections::VecDeque::new();
             for _ in 0..len {
-                v.push_back(T::from_tape(tape)?)
+                v.push_back(T::from_tape(tape)?);
             }
             Ok(v)
         } else {
@@ -95,7 +95,7 @@ where
         if let Some(simd_json::Node::Array { len, .. }) = tape.next() {
             let mut v = collections::BinaryHeap::new();
             for _ in 0..len {
-                v.push(T::from_tape(tape)?)
+                v.push(T::from_tape(tape)?);
             }
             Ok(v)
         } else {
@@ -349,33 +349,33 @@ mod test {
     #[test]
     fn vec() {
         let mut v: Vec<u8> = Vec::new();
-        assert_eq!(v.json_string().unwrap(), "[]");
+        assert_eq!(v.json_string().expect("invalid data"), "[]");
 
         v.push(1);
-        let mut s = v.json_string().unwrap();
+        let mut s = v.json_string().expect("invalid data");
         assert_eq!(s, "[1]");
-        let s: Vec<u8> = unsafe { Vec::from_str(s.as_mut_str()) }.unwrap();
+        let s: Vec<u8> = unsafe { Vec::from_str(s.as_mut_str()) }.expect("invalid data");
         assert_eq!(s, v);
 
         v.push(2);
-        let mut s = v.json_string().unwrap();
+        let mut s = v.json_string().expect("invalid test data");
         assert_eq!(s, "[1,2]");
-        let s: Vec<u8> = unsafe { Vec::from_str(s.as_mut_str()) }.unwrap();
+        let s: Vec<u8> = unsafe { Vec::from_str(s.as_mut_str()) }.expect("invalid test data");
         assert_eq!(s, v);
 
         v.push(3);
-        let mut s = v.json_string().unwrap();
+        let mut s = v.json_string().expect("invalid test data");
         assert_eq!(s, "[1,2,3]");
-        let s: Vec<u8> = unsafe { Vec::from_str(s.as_mut_str()) }.unwrap();
+        let s: Vec<u8> = unsafe { Vec::from_str(s.as_mut_str()) }.expect("invalid test data");
         assert_eq!(s, v);
     }
 
     #[test]
     fn range() {
         let r = 1..42;
-        let mut v = r.json_vec().unwrap();
+        let mut v = r.json_vec().expect("invalid test data");
         assert_eq!(br#"{"start":1,"end":42}"#, v.as_slice());
-        let r1 = Range::from_slice(v.as_mut_slice()).unwrap();
+        let r1 = Range::from_slice(v.as_mut_slice()).expect("invalid test data");
         assert_eq!(r, r1);
     }
 }

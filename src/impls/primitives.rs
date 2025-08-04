@@ -4,9 +4,10 @@ use std::convert::TryFrom;
 impl Serialize for bool {
     #[inline]
     fn json_write<W: Write>(&self, writer: &mut W) -> Result {
-        match *self {
-            true => writer.write_all(b"true"),
-            false => writer.write_all(b"false"),
+        if *self {
+            writer.write_all(b"true")
+        } else {
+            writer.write_all(b"false")
         }
     }
 }
@@ -96,6 +97,7 @@ ryu!(f32);
 
 impl<'input> Deserialize<'input> for f64 {
     #[inline]
+    #[allow(clippy::cast_precision_loss)]
     fn from_tape(tape: &mut Tape<'input>) -> de::Result<Self>
     where
         Self: Sized + 'input,
@@ -115,6 +117,7 @@ impl<'input> Deserialize<'input> for f64 {
 
 impl<'input> Deserialize<'input> for f32 {
     #[inline]
+    #[allow(clippy::cast_precision_loss, clippy::cast_possible_truncation)]
     fn from_tape(tape: &mut Tape<'input>) -> de::Result<Self>
     where
         Self: Sized + 'input,

@@ -38,7 +38,7 @@ impl Parse for FieldAttrs {
                 other => {
                     return Err(syn::Error::new(
                         attr.span(),
-                        format!("unexpected attribute `{}`", other),
+                        format!("unexpected attribute `{other}`"),
                     ))
                 }
             }
@@ -114,7 +114,7 @@ impl Parse for StructAttrs {
                         other => {
                             return Err(syn::Error::new(
                                 attr.span(),
-                                format!("unexpected rename_all type `{}`", other),
+                                format!("unexpected rename_all type `{other}`"),
                             ))
                         }
                     }
@@ -125,7 +125,7 @@ impl Parse for StructAttrs {
                 other => {
                     return Err(syn::Error::new(
                         attr.span(),
-                        format!("unexpected field attribute `{}`", other),
+                        format!("unexpected field attribute `{other}`",),
                     ))
                 }
             }

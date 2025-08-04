@@ -31,7 +31,7 @@ fn named() {
         f2: "snot".into(),
     };
     let mut s = b.json_string().unwrap();
-    println!("{}", s);
+    println!("{s}",);
     assert_eq!(r#"{"f1":1,"f2":"snot"}"#, s);
     let b1 = unsafe { Bla::from_str(s.as_mut_str()) }.unwrap();
     assert_eq!(b, b1);

@@ -89,7 +89,7 @@ pub(crate) fn derive(
                 (
                     &v.ident,
                     (0..v.fields.len())
-                        .map(|i| Ident::new(&format!("v{}", i), Span::call_site()))
+                        .map(|i| Ident::new(&format!("v{i}"), Span::call_site()))
                         .collect::<Vec<_>>(),
                 ),
                 format!(
