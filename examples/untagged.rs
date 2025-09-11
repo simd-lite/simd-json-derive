@@ -18,7 +18,7 @@ enum Response<'de> {
     Error(ErrorResponse<'de>),
 }
 
-fn parse(data: &mut [u8]) -> Result<Response, Box<dyn std::error::Error>> {
+fn parse<'de>(data: &'de mut [u8]) -> Result<Response<'de>, Box<dyn std::error::Error>> {
     let tape = simd_json::to_tape(data)?;
 
     if let [Node::Object { len: 1, count: 2 }, Node::String("error"), Node::String(error)] =
