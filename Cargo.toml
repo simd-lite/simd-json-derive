@@ -21,12 +21,12 @@ members = ["simd-json-derive-int"]
 
 [dependencies]
 simd-json-derive-int = { path = "./simd-json-derive-int", version = "0.17.0" }
-value-trait = { version = "0.11.0" }
+value-trait = { version = "0.12.0" }
 itoa = "1"
 ryu = "1"
 chrono = { version = "0.4", optional = true }
-simd-json = { version = "0.16.0" }
-heap-array = { version = "0.1.1", optional = true }
+simd-json = { version = "0.17.0" }
+heap-array = { version = "0.1", optional = true }
 thiserror = "2.0"
 
 [dev-dependencies]
