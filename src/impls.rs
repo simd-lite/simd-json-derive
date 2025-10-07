@@ -82,10 +82,8 @@ where
     {
         if let Some(simd_json::Node::Object { len: 1, .. }) = tape.next() {
             match tape.next() {
-                Some(simd_json::Node::String("Ok")) => Ok(Ok(TOk::from_tape(tape)?)),
-                Some(simd_json::Node::String("Err")) => Ok(Err(TErr::from_tape(tape)?)),
-                Some(simd_json::Node::String("ok")) => Ok(Ok(TOk::from_tape(tape)?)),
-                Some(simd_json::Node::String("err")) => Ok(Err(TErr::from_tape(tape)?)),
+                Some(simd_json::Node::String("Ok" | "ok")) => Ok(Ok(TOk::from_tape(tape)?)),
+                Some(simd_json::Node::String("Err" | "err")) => Ok(Err(TErr::from_tape(tape)?)),
                 _ => Err(de::Error::custom("result not `Ok` or `Err`")),
             }
         } else {
